@@ -315,8 +315,9 @@ if (!customElements.get("table-of-contents")) {
 
 <style>
 	table-of-contents#toc {
-		max-height: 100%;
-		overflow: auto;
+		max-height: calc(100vh - 10rem);
+		overflow-x: hidden;
+		overflow-y: auto;
 		position: relative;
 		scroll-behavior: smooth;
 		display: block;

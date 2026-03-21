@@ -3,10 +3,17 @@
  * 处理移动端目录的状态管理和交互逻辑
  */
 
+import {
+	extractHeadings,
+	generateTOCItems as buildTOCItemsFromHeadings,
+	getTOCConfig as getFullTOCConfig,
+} from "../utils/toc-utils";
+
 export interface TOCItem {
 	id: string;
 	text: string;
 	level: number;
+	depth: number;
 	badge?: string;
 }
 
@@ -22,65 +29,17 @@ export interface TOCConfig {
 	depth: number;
 }
 
-/**
- * 生成目录项
- */
-export function generateTOCItems(config: TOCConfig): TOCItem[] {
-	const japaneseHiragana = [
-		"ア",
-		"イ",
-		"ウ",
-		"エ",
-		"オ",
-		"カ",
-		"キ",
-		"ク",
-		"ケ",
-		"コ",
-		"サ",
-		"シ",
-		"ス",
-		"セ",
-		"ソ",
-		"タ",
-		"チ",
-		"ツ",
-		"テ",
-		"ト",
-	];
-
-	const headings = document.querySelectorAll("h1, h2, h3, h4, h5, h6");
-	const items: TOCItem[] = [];
-	let h1Count = 0;
-
-	headings.forEach((heading) => {
-		if (!heading.id) {return;}
-
-		const level = parseInt(heading.tagName.charAt(1), 10);
-
-		// 根据 depth 配置过滤标题
-		if (level > config.depth) {return;}
-
-		const text = (heading.textContent || "").replace(/#+\s*$/, "");
-		let badge = "";
-
-		// 只为 H1 标题生成 badge
-		if (level === 1) {
-			h1Count++;
-			if (
-				config.useJapaneseBadge &&
-				h1Count - 1 < japaneseHiragana.length
-			) {
-				badge = japaneseHiragana[h1Count - 1];
-			} else {
-				badge = h1Count.toString();
-			}
-		}
-
-		items.push({ id: heading.id, text, level, badge });
-	});
-
-	return items;
+/** 生成目录项（与侧边栏共用 toc-utils 的过滤逻辑） */
+export function generateTOCItems(): TOCItem[] {
+	const headings = extractHeadings("#post-container");
+	const built = buildTOCItemsFromHeadings(headings, getFullTOCConfig());
+	return built.map((item) => ({
+		id: item.id,
+		text: item.text,
+		level: item.level,
+		depth: item.depth,
+		badge: item.badge,
+	}));
 }
 
 /**

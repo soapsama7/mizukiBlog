@@ -19,13 +19,104 @@ import { LinkPreset } from "./types/config";
 // 移除i18n导入以避免循环依赖
 
 // 定义站点语言
-const SITE_LANG = "ja"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
+const SITE_LANG = "zh_CN"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
 const SITE_TIMEZONE = 8; //设置你的网站时区 from -12 to 12 default in UTC+8
+
+// GitHub 图床 cdn_img：公开仓库下的图片需用「直链」而非仓库网页 URL
+// 任选其一：jsDelivr（常带缓存，国内访问较稳）或 raw.githubusercontent.com
+// 例：https://raw.githubusercontent.com/soapsama7/cdn_img/main/img/文件名.jpg
+const CDN_IMG_BASE = "https://cdn.jsdelivr.net/gh/soapsama7/cdn_img@main/img";
+/** 使用 img 目录全部图片作为桌面横幅/全屏壁纸 */
+const cdnBannerWallpapers: string[] = [
+	`${CDN_IMG_BASE}/202511021434598.png`,
+	`${CDN_IMG_BASE}/202511021441196.jpg`,
+	`${CDN_IMG_BASE}/202511021517025.jpg`,
+	`${CDN_IMG_BASE}/202511021517055.jpg`,
+	`${CDN_IMG_BASE}/202511021517085.png`,
+	`${CDN_IMG_BASE}/202511021517116.png`,
+	`${CDN_IMG_BASE}/202511021517369.jpg`,
+	`${CDN_IMG_BASE}/202511021517403.jpg`,
+	`${CDN_IMG_BASE}/202511021517434.jpg`,
+	`${CDN_IMG_BASE}/202511021517456.jpg`,
+	`${CDN_IMG_BASE}/202511021517484.jpg`,
+	`${CDN_IMG_BASE}/202511021517519.jpg`,
+	`${CDN_IMG_BASE}/202511021517554.jpg`,
+	`${CDN_IMG_BASE}/202511021517585.jpg`,
+	`${CDN_IMG_BASE}/202511021517616.jpg`,
+	`${CDN_IMG_BASE}/202511021517645.png`,
+	`${CDN_IMG_BASE}/202511021517677.jpg`,
+	`${CDN_IMG_BASE}/202511021517711.jpg`,
+	`${CDN_IMG_BASE}/202511021517742.jpg`,
+	`${CDN_IMG_BASE}/202511021517775.jpg`,
+	`${CDN_IMG_BASE}/202511021517808.png`,
+	`${CDN_IMG_BASE}/202511021517839.jpg`,
+	`${CDN_IMG_BASE}/202511021517871.jpg`,
+	`${CDN_IMG_BASE}/202511021517900.jpg`,
+	`${CDN_IMG_BASE}/202511021517930.jpg`,
+	`${CDN_IMG_BASE}/202511021517961.jpg`,
+	`${CDN_IMG_BASE}/202511021517992.jpg`,
+	`${CDN_IMG_BASE}/202511021519133.jpg`,
+	`${CDN_IMG_BASE}/202511021519174.jpg`,
+	`${CDN_IMG_BASE}/202511021519214.jpg`,
+	`${CDN_IMG_BASE}/202511021519247.jpg`,
+	`${CDN_IMG_BASE}/202511021519273.png`,
+	`${CDN_IMG_BASE}/202511021519276.png`,
+	`${CDN_IMG_BASE}/202511021519305.jpg`,
+	`${CDN_IMG_BASE}/202511021519306.png`,
+	`${CDN_IMG_BASE}/202511021519336.jpg`,
+	`${CDN_IMG_BASE}/202511021519366.jpg`,
+	`${CDN_IMG_BASE}/202511021519398.jpg`,
+	`${CDN_IMG_BASE}/202511021519428.png`,
+	`${CDN_IMG_BASE}/202511021519458.jpg`,
+	`${CDN_IMG_BASE}/202511021519486.jpg`,
+	`${CDN_IMG_BASE}/202511021519517.jpg`,
+	`${CDN_IMG_BASE}/202511021519546.jpg`,
+	`${CDN_IMG_BASE}/202511021519578.jpg`,
+	`${CDN_IMG_BASE}/202511021519609.png`,
+	`${CDN_IMG_BASE}/202511021527036.png`,
+	`${CDN_IMG_BASE}/202511021527066.jpg`,
+	`${CDN_IMG_BASE}/202511021527099.jpg`,
+	`${CDN_IMG_BASE}/202511021527130.jpg`,
+	`${CDN_IMG_BASE}/202511021527161.png`,
+	`${CDN_IMG_BASE}/202511021527189.jpg`,
+	`${CDN_IMG_BASE}/202511021527216.jpg`,
+	`${CDN_IMG_BASE}/202511021527246.jpg`,
+	`${CDN_IMG_BASE}/202511021527278.jpg`,
+	`${CDN_IMG_BASE}/202511021527309.jpg`,
+	`${CDN_IMG_BASE}/202511021527340.jpg`,
+	`${CDN_IMG_BASE}/202511021527371.jpg`,
+	`${CDN_IMG_BASE}/202511021527404.jpg`,
+	`${CDN_IMG_BASE}/202511021527435.jpg`,
+	`${CDN_IMG_BASE}/202511021527464.jpg`,
+	`${CDN_IMG_BASE}/202511021527494.jpg`,
+	`${CDN_IMG_BASE}/202511021527525.jpg`,
+	`${CDN_IMG_BASE}/202511021527555.jpg`,
+	`${CDN_IMG_BASE}/202511021527584.jpg`,
+	`${CDN_IMG_BASE}/202511021527620.jpg`,
+	`${CDN_IMG_BASE}/202511021527651.jpg`,
+	`${CDN_IMG_BASE}/202511021527683.jpg`,
+	`${CDN_IMG_BASE}/202511021527716.jpg`,
+	`${CDN_IMG_BASE}/202511021527747.jpg`,
+	`${CDN_IMG_BASE}/202511021527776.jpg`,
+	`${CDN_IMG_BASE}/202511021527913.jpg`,
+	`${CDN_IMG_BASE}/202511021527952.png`,
+	`${CDN_IMG_BASE}/202511021527993.png`,
+	`${CDN_IMG_BASE}/202511062048345.jpg`,
+	`${CDN_IMG_BASE}/202511161451137.jpg`,
+	`${CDN_IMG_BASE}/202511161451313.png`,
+	`${CDN_IMG_BASE}/202511281541219.jpg`,
+	`${CDN_IMG_BASE}/202511281541663.jpg`,
+	`${CDN_IMG_BASE}/202511281542051.jpg`,
+	`${CDN_IMG_BASE}/202511281542574.jpg`,
+	`${CDN_IMG_BASE}/202511281542638.jpeg`,
+	`${CDN_IMG_BASE}/202511281542796.jpg`,
+];
+
 export const siteConfig: SiteConfig = {
-	title: "Mizuki",
-	subtitle: "One demo website",
-	siteURL: "https://mizuki.mysqil.com/", // 请替换为你的站点URL，以斜杠结尾
-	siteStartDate: "2025-01-01", // 站点开始运行日期，用于站点统计组件计算运行天数
+	title: "Yume konSeki",
+	subtitle: "今を生きる",
+	siteURL: "https://soapsama.cn/", // 请替换为你的站点URL，以斜杠结尾
+	siteStartDate: "2025-11-03", // 站点开始运行日期，用于站点统计组件计算运行天数
 
 	timeZone: SITE_TIMEZONE,
 
@@ -38,22 +129,22 @@ export const siteConfig: SiteConfig = {
 
 	// 特色页面开关配置（关闭未使用的页面有助于提升 SEO，关闭后请记得在 navbarConfig 中移除对应链接）
 	featurePages: {
-		anime: true, // 番剧页面开关
-		diary: true, // 日记页面开关
+		anime: false, // 番剧页面开关
+		diary: false, // 日记页面开关
 		friends: true, // 友链页面开关
-		projects: true, // 项目页面开关
-		skills: true, // 技能页面开关
-		timeline: true, // 时间线页面开关
+		projects: false, // 项目页面开关
+		skills: false, // 技能页面开关
+		timeline: false, // 时间线页面开关
 		albums: true, // 相册页面开关
-		devices: true, // 设备页面开关
+		devices: false, // 设备页面开关
 	},
 
 	// 顶栏标题配置
 	navbarTitle: {
 		// 显示模式："text-icon" 显示图标+文本，"logo" 仅显示Logo
-		mode: "logo",
+		mode: "text-icon",
 		// 顶栏标题文本
-		text: "MizukiUI",
+		text: "Yume konSeki",
 		// 顶栏标题图标路径，默认使用 public/assets/home/home.png
 		icon: "assets/home/home.png",
 		// 网站Logo图片路径
@@ -118,14 +209,7 @@ export const siteConfig: SiteConfig = {
 	banner: {
 		// 支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播
 		src: {
-			desktop: [
-				"/assets/desktop-banner/1.webp",
-				"/assets/desktop-banner/2.webp",
-				"/assets/desktop-banner/3.webp",
-				"/assets/desktop-banner/4.webp",
-				"/assets/desktop-banner/5.webp",
-				"/assets/desktop-banner/6.webp",
-			], // 桌面横幅图片
+			desktop: cdnBannerWallpapers,
 			mobile: [
 				"/assets/mobile-banner/1.webp",
 				"/assets/mobile-banner/2.webp",
@@ -133,8 +217,8 @@ export const siteConfig: SiteConfig = {
 				"/assets/mobile-banner/4.webp",
 				"/assets/mobile-banner/5.webp",
 				"/assets/mobile-banner/6.webp",
-			], // 移动横幅图片
-		}, // 使用本地横幅图片
+			],
+		}, // GitHub 图床（见文件顶部 CDN_IMG_BASE）
 
 		position: "center", // 等同于 object-position，仅支持 'top', 'center', 'bottom'。默认为 'center'
 
@@ -160,14 +244,14 @@ export const siteConfig: SiteConfig = {
 
 		homeText: {
 			enable: true, // 在主页显示自定义文本
-			title: "わたしの部屋", // 主页横幅主标题
+			title: "ソープサマの部屋", // 主页横幅主标题
 
 			subtitle: [
-				"特別なことはないけど、君がいると十分です",
-				"今でもあなたは私の光",
-				"君ってさ、知らないうちに私の毎日になってたよ",
-				"君と話すと、なんか毎日がちょっと楽しくなるんだ",
-				"今日はなんでもない日。でも、ちょっとだけいい日",
+				"朽ちゆく身体と心を連れ、一人当て無く漂っていくの",
+				"揺れる摩天楼に抱かれて、ビルにまみえる夜空の星に願いを込める",
+				"月明かりを背に、あの夏を駆け抜けて",
+				"からからのハートだって息を吸うことを",
+				"ぎゅっとしてしまいそうな、目が醒めても忘れないでよね",
 			],
 			typewriter: {
 				enable: true, // 启用副标题打字机效果
@@ -186,14 +270,14 @@ export const siteConfig: SiteConfig = {
 		},
 
 		navbar: {
-			transparentMode: "semifull", // 导航栏透明模式："semi" 半透明加圆角，"full" 完全透明，"semifull" 动态透明
+			transparentMode: "full", // 导航栏透明模式："semi" 半透明加圆角，"full" 完全透明，"semifull" 动态透明
 		},
 	},
 	toc: {
 		enable: true, // 启用目录功能
-		mode: "sidebar", // 目录显示模式："float" 悬浮按钮模式，"sidebar" 侧边栏模式
-		depth: 2, // 目录深度，1-6，1 表示只显示 h1 标题，2 表示显示 h1 和 h2 标题，依此类推
-		useJapaneseBadge: true, // 使用日语假名标记（あいうえお...）代替数字，开启后会将 1、2、3... 改为 あ、い、う...
+		mode: "sidebar", // 目录显示模式："float" 悬浮，"sidebar" 侧边栏
+		depth: 2, // 目录深度 1-3（相对文中最浅标题）
+		useJapaneseBadge: true, // 使用日语假名标记（あいうえお...）代替数字
 	},
 	showCoverInContent: true, // 在文章内容页显示文章封面
 	generateOgImages: false, // 启用生成OpenGraph图片功能,注意开启后要渲染很长时间，不建议本地调试的时候开启
@@ -230,14 +314,7 @@ export const siteConfig: SiteConfig = {
 };
 export const fullscreenWallpaperConfig: FullscreenWallpaperConfig = {
 	src: {
-		desktop: [
-			"/assets/desktop-banner/1.webp",
-			"/assets/desktop-banner/2.webp",
-			"/assets/desktop-banner/3.webp",
-			"/assets/desktop-banner/4.webp",
-			"/assets/desktop-banner/5.webp",
-			"/assets/desktop-banner/6.webp",
-		], // 桌面横幅图片
+		desktop: cdnBannerWallpapers,
 		mobile: [
 			"/assets/mobile-banner/1.webp",
 			"/assets/mobile-banner/2.webp",
@@ -245,8 +322,8 @@ export const fullscreenWallpaperConfig: FullscreenWallpaperConfig = {
 			"/assets/mobile-banner/4.webp",
 			"/assets/mobile-banner/5.webp",
 			"/assets/mobile-banner/6.webp",
-		], // 移动横幅图片
-	}, // 使用本地横幅图片
+		],
+	},
 	position: "center", // 壁纸位置，等同于 object-position
 	carousel: {
 		enable: true, // 启用轮播
@@ -269,22 +346,22 @@ export const navBarConfig: NavBarConfig = {
 			children: [
 				{
 					name: "GitHub",
-					url: "https://github.com/matsuzaka-yuki/Mizuki",
+					url: "https://github.com/soapsama7",
 					external: true,
 					icon: "fa7-brands:github",
 				},
 				{
 					name: "Bilibili",
-					url: "https://space.bilibili.com/701864046",
+					url: "https://space.bilibili.com/173561793",
 					external: true,
 					icon: "fa7-brands:bilibili",
-				},
-				{
-					name: "Gitee",
-					url: "https://gitee.com/matsuzakayuki/Mizuki",
-					external: true,
-					icon: "mdi:git",
-				},
+				}
+				// {
+				// 	name: "Gitee",
+				// 	url: "https://gitee.com/matsuzakayuki/Mizuki",
+				// 	external: false,
+				// 	icon: "mdi:git",
+				// },
 			],
 		},
 		{
@@ -292,27 +369,27 @@ export const navBarConfig: NavBarConfig = {
 			url: "/content/",
 			icon: "material-symbols:person",
 			children: [
-				{
-					name: "Anime",
-					url: "/anime/",
-					icon: "material-symbols:movie",
-				},
-				{
-					name: "Diary",
-					url: "/diary/",
-					icon: "material-symbols:book",
-				},
+				// {
+				// 	name: "Anime",
+				// 	url: "/anime/",
+				// 	icon: "material-symbols:movie",
+				// },
+				// {
+				// 	name: "Diary",
+				// 	url: "/diary/",
+				// 	icon: "material-symbols:book",
+				// },
 				{
 					name: "Gallery",
 					url: "/albums/",
 					icon: "material-symbols:photo-library",
-				},
-				{
-					name: "Devices",
-					url: "/devices/",
-					icon: "material-symbols:devices",
-					external: false,
-				},
+				}
+				// {
+				// 	name: "Devices",
+				// 	url: "/devices/",
+				// 	icon: "material-symbols:devices",
+				// 	external: false,
+				// },
 			],
 		},
 		{
@@ -332,35 +409,35 @@ export const navBarConfig: NavBarConfig = {
 				},
 			],
 		},
-		{
-			name: "Others",
-			url: "#",
-			icon: "material-symbols:more-horiz",
-			children: [
-				{
-					name: "Projects",
-					url: "/projects/",
-					icon: "material-symbols:work",
-				},
-				{
-					name: "Skills",
-					url: "/skills/",
-					icon: "material-symbols:psychology",
-				},
-				{
-					name: "Timeline",
-					url: "/timeline/",
-					icon: "material-symbols:timeline",
-				},
-			],
-		},
+		// {
+		// 	name: "Others",
+		// 	url: "#",
+		// 	icon: "material-symbols:more-horiz",
+		// 	children: [
+		// 		{
+		// 			name: "Projects",
+		// 			url: "/projects/",
+		// 			icon: "material-symbols:work",
+		// 		},
+		// 		{
+		// 			name: "Skills",
+		// 			url: "/skills/",
+		// 			icon: "material-symbols:psychology",
+		// 		},
+		// 		{
+		// 			name: "Timeline",
+		// 			url: "/timeline/",
+		// 			icon: "material-symbols:timeline",
+		// 		},
+		// 	],
+		// },
 	],
 };
 
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/avatar.webp", // 相对于 /src 目录。如果以 '/' 开头，则相对于 /public 目录
-	name: "まつざか ゆき",
-	bio: "世界は大きい、君は行かなければならない",
+	name: "soapsama",
+	bio: "僕らは命に嫌われている、価値観もエゴも押し付けて",
 	typewriter: {
 		enable: true, // 启用个人简介打字机效果
 		speed: 80, // 打字速度（毫秒）
@@ -369,28 +446,28 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "Bilibili",
 			icon: "fa7-brands:bilibili",
-			url: "https://space.bilibili.com/701864046",
+			url: "https://space.bilibili.com/173561793",
 		},
-		{
-			name: "Gitee",
-			icon: "mdi:git",
-			url: "https://gitee.com/matsuzakayuki",
-		},
+		// {
+		// 	name: "Gitee",
+		// 	icon: "mdi:git",
+		// 	url: "https://gitee.com/matsuzakayuki",
+		// },
 		{
 			name: "GitHub",
 			icon: "fa7-brands:github",
-			url: "https://github.com/matsuzaka-yuki",
+			url: "https://github.com/soapsama7",
 		},
-		{
-			name: "Codeberg",
-			icon: "simple-icons:codeberg",
-			url: "https://codeberg.org",
-		},
-		{
-			name: "Discord",
-			icon: "fa7-brands:discord",
-			url: "https://discord.gg/MqW6TcQtVM",
-		},
+		// {
+		// 	name: "Codeberg",
+		// 	icon: "simple-icons:codeberg",
+		// 	url: "https://codeberg.org",
+		// },
+		// {
+		// 	name: "Discord",
+		// 	icon: "fa7-brands:discord",
+		// 	url: "https://discord.gg/MqW6TcQtVM",
+		// },
 	],
 };
 
@@ -435,7 +512,7 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
 };
 
 export const commentConfig: CommentConfig = {
-	enable: false, // 启用评论功能。当设置为 false 时，评论组件将不会显示在文章区域。
+	enable: true, // 启用评论功能。当设置为 false 时，评论组件将不会显示在文章区域。
 	twikoo: {
 		envId: "https://twikoo.vercel.app",
 		lang: SITE_LANG,
@@ -448,8 +525,8 @@ export const shareConfig: ShareConfig = {
 
 export const announcementConfig: AnnouncementConfig = {
 	title: "", // 公告标题，填空使用i18n字符串Key.announcement
-	content: "ブログへようこそ！これはサンプルの告知です", // 公告内容
-	closable: true, // 允许用户关闭公告
+	content: "喜报我舞萌w6了", // 公告内容
+	closable: false, // 允许用户关闭公告
 	link: {
 		enable: true, // 启用链接
 		text: "Learn More", // 链接文本
@@ -463,8 +540,8 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	mode: "meting", // 音乐播放器模式，可选 "local" 或 "meting"
 	meting_api:
 		"https://meting.mysqil.com/api?server=:server&type=:type&id=:id&auth=:auth&r=:r", // Meting API 地址
-	id: "14164869977", // 歌单ID
-	server: "netease", // 音乐源服务器。有的meting的api源支持更多平台,一般来说,netease=网易云音乐, tencent=QQ音乐, kugou=酷狗音乐, xiami=虾米音乐, baidu=百度音乐
+	id: "928530170", // 歌单ID
+	server: "netease", // 音乐源服务器
 	type: "playlist", // 播单类型
 };
 
@@ -624,17 +701,16 @@ export const pioConfig: import("./types/config").PioConfig = {
 	mode: "draggable", // 默认为可拖拽模式
 	hiddenOnMobile: true, // 默认在移动设备上隐藏
 	dialog: {
-		welcome: "Welcome to Mizuki Website!", // 欢迎词
+		welcome: "Welcome to myblog!", // 欢迎词
 		touch: [
-			"What are you doing?",
-			"Stop touching me!",
-			"HENTAI!",
-			"Don't bully me like that!",
+			"你在干嘛！",
+			"别戳我啦",
+			"hentai！",
 		], // 触摸提示
-		home: "Click here to go back to homepage!", // 首页提示
-		skin: ["Want to see my new outfit?", "The new outfit looks great~"], // 换装提示
-		close: "QWQ See you next time~", // 关闭提示
-		link: "https://github.com/matsuzaka-yuki/Mizuki", // 关于链接
+		home: "点这里回到主页", // 首页提示
+		// skin: ["Want to see my new outfit?", "The new outfit looks great~"], // 换装提示
+		close: "QWQ 拜拜", // 关闭提示
+		// link: "https://github.com/matsuzaka-yuki/Mizuki", // 关于链接
 	},
 };
 

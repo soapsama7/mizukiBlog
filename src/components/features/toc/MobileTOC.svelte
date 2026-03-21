@@ -10,7 +10,6 @@
 		checkIsHomePage,
 		generatePostItems,
 		generateTOCItems,
-		getTOCConfig,
 		type PostItem,
 		scrollToHeading as scrollToHeadingUtil,
 		type TOCItem,
@@ -141,8 +140,7 @@
 			tocItems = [];
 			postItems = generatePostItems();
 		} else {
-			const config = getTOCConfig();
-			tocItems = generateTOCItems(config);
+			tocItems = generateTOCItems();
 			postItems = [];
 			setupIntersectionObserver();
 			updateActiveHeading();
@@ -259,9 +257,9 @@
 						class:active={activeId === item.id}
 						style="padding-left: {activeId === item.id ? getActivePadding(item.level) : getLevelPadding(item.level)}"
 					>
-						{#if item.level === 1}
+						{#if item.badge}
 							<span class="badge">{item.badge}</span>
-						{:else if item.level === 2}
+						{:else if item.depth === 1}
 							<span class="dot-square"></span>
 						{:else}
 							<span class="dot-small"></span>
