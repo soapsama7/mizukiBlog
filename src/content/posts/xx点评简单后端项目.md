@@ -274,6 +274,7 @@ String token = request.getHeader("Authorization");
 也称为**热点key问题**，指的是一个被高并发访问且缓存业务重建较为复杂的key突然失效了，大量访问请求会瞬间冲向数据库以过载。
 
 **缓存业务重建较为复杂**指的是某些数据不仅仅是查一个数据库而得，可能需要多表查询甚至进行大量计算才可以得到，缓存重建的时间比较久的一种情况。此时它又是一个热点key，有大量并发线程来访问，那么就会出现这种情况：
+
 ![image-20260109185036688](https://cdn.jsdelivr.net/gh/soapsama7/cdn_img@latest//post/202601091850785.png)
 
 在重建缓存过程中，大量线程都会未命中缓存，导致大量线程同时查询数据库并进行缓存重建，这一超高爆发对数据库会带来极大冲击
@@ -288,7 +289,7 @@ String token = request.getHeader("Authorization");
 
 ---
 
-这边我的代码里面两种方法都写了，留作一个备份
+**这边我的代码里面两种方法都写了，但实际用的是互斥锁，另一个留作一个备份**
 
 #### 互斥锁
 
@@ -2472,8 +2473,77 @@ count：分页大小（这里为3）
 
 至于相关代码就不写了，前端也没有相应的签到功能，就这样吧，跟随视频敲的就到此为止，下面是一些自己后续的修改和回顾
 
-## 自修改代码和回顾
+## 回顾
 
+启动spring项目和前端nginx服务器，然后在浏览器访问页面（同时查看网络请求），可以发现进入主页面的时候有两个URL请求，分别为`http://localhost:8080/api/shop-type/list`和`http://localhost:8080/api/blog/hot?current=1`
+
+第一个查询的是上面的店铺列表以展示，先查Redis，若没有再走数据库，然后把数据存到redis中缓存，方便访问
+
+第二个接收一个`current`参数，按点赞数查询top热度博客展示，同时用接收的参数做分页查询
+
+这个时候如果随便给一个博客点赞，会提示未登录并跳转到登录页面，这里是因为写了拦截器规则，若未登录且访问相关页面会直接跳转到登录页面
+
+登录/注册这里前面都写过没啥好说的，不过这里视频没写`logout`，我自己补了一个，改了改bug也还算能用（前几天加的忘记写了，中间的啥bug也记不太清）
+
+```
+    @Override
+    public Result logout(HttpServletRequest request) {
+        // 从请求头获取token
+        String token = request.getHeader("authorization");
+        if (token == null || token.isEmpty()) {
+            return Result.fail("请先登录！");
+        }
+        // 移除redis中的token和UserHolder即可
+        String tokenKey = LOGIN_USER_KEY + token;
+        Boolean isSuccess = stringRedisTemplate.delete(tokenKey);
+        // 若未删除成功，则认为还没有登录
+        if (isSuccess){
+            UserHolder.removeUser();
+            return Result.ok("退出登录成功！");
+        }
+            return Result.fail("请先登录！");
+    }
+```
+
+
+
+登录之后就能点赞了，每个用户只能点赞一次，点赞和取消点赞用的是同一个接口，因此根据用户是否点过赞来决定逻辑。这里用时间戳作为score，用于后面判断是否点过赞
+
+随便打开主页的一个blog，可以看到有四条请求：
+
+`http://localhost:8080/api/blog/23`、`http://localhost:8080/api/shop/1`、`http://localhost:8080/api/blog/likes/23`、`http://localhost:8080/api/user/me`
+
+依次来回顾一下相关逻辑
+
+- 第一条就是查当前博客的，顺手查一下关联用户以及当前用户是否点过赞
+- 第二条是查询当前博客关联的商户的，根据前端传来的商户Id进行查询，这里涉及到缓存穿透、雪崩、击穿三个问题，我的代码用的是互斥锁方案解决，但仍保留了逻辑过期方案作为学习，使用配置文件可以进行方案更改。前面都有详细笔记这里不赘述
+- 第三条是查询最早五位为这篇博客点赞的用户的，没什么东西
+- 第四条就是返回当前登录用户，原来的代码直接在`controller`层return了，加了一下Service规范一点
+
+看了一下博客似乎还有评论功能，但是视频没讲，我也懒得做了
+
+这里还做了关注功能，用数据库做关注一一对应关系，同时存到redis加速访问速度（但是这里我觉得方案有些简单，例如b站、抖音这种大平台应该不会用这种方案，不过现在就这样吧）
+
+最麻烦的一节优惠券秒杀这里也不测了，前面写得够多，都看看回顾一下就行，主要看看消费者怎么处理消息即可
+
+至于utils里面的很多类，像`PasswordEncoder`这样没用到的就不管了，一些用到的也没啥好说的
+
+---
+
+排查了一下又发现一个bug，我在edge浏览器这边登录了之后，然后去火狐访问页面，发现直接就是登录状态了。
+
+原因是`Tomcat/Servlet `这种服务器是线程池并发处理，请求线程会复用。又因为取用户是从`Thread`里面取，因此可能拿到同一个用户，对于我这种学习项目来说无所谓，但这样确实不太好，有点严重了，还是修一下吧，也很简单，在拦截器（拦截所有路径的那个）里面加一段即可：
+
+```
+@Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        UserHolder.removeUser();
+    }
+```
+
+这个方法会在`controller`请求完成之后执行，清除线程中的用户账号数据。同时并不会影响用户使用，因为浏览器还带着token。
+
+但貌似没法做登录状态保存了（就是类似b站那样登录一次之后下次再来不用继续登录的样子），查了一下资料发现这种东西其实应该用cookie做（  但是这个项目已经收尾了就这样吧，不想再写太久了，说白了本身也没啥技术含量，就到这里
 
 
 
