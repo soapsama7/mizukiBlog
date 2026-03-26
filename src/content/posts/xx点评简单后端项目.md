@@ -2552,4 +2552,499 @@ count：分页大小（这里为3）
 
 
 
+## Docker配置
+
+来点docker命令方便后面自己查：
+
+查看容器和镜像
+
+```
+# 查看所有运行中的容器
+docker ps
+
+# 查看所有容器，包括停止的
+docker ps -a
+
+# 查看镜像列表
+docker images
+```
+
+------
+
+启动、停止、重启容器
+
+```
+# 启动指定容器
+docker start <容器名或容器ID>
+
+# 停止指定容器
+docker stop <容器名或容器ID>
+
+# 重启容器
+docker restart <容器名或容器ID>
+```
+
+------
+
+删除容器
+
+```
+# 删除单个停止的容器
+docker rm <容器名或容器ID>
+
+# 删除所有停止的容器
+docker container prune -f
+
+# 强制删除正在运行的容器
+docker rm -f <容器名或容器ID>
+```
+
+------
+
+删除镜像
+
+```
+# 删除单个镜像
+docker rmi <镜像名或镜像ID>
+
+# 删除所有未被容器使用的镜像
+docker image prune -a -f
+```
+
+------
+
+构建和运行镜像
+
+```
+# 构建镜像
+docker build -t <镜像名>:<tag> <Dockerfile所在目录>
+
+# 后台运行容器
+docker run -d --name <容器名> -p <本地端口>:<容器端口> <镜像名>:<tag>
+```
+
+------
+
+Docker Compose（推荐管理多容器项目）
+
+```
+# 启动服务（后台）
+docker compose up -d
+
+# 停止服务
+docker compose down
+
+# 重新构建并启动服务
+docker compose up -d --build
+
+# 查看服务状态
+docker compose ps
+
+# 删除所有服务容器、网络、卷
+docker compose down -v
+```
+
+------
+
+清理 Docker 环境
+
+```
+# 删除所有未使用的容器、网络、镜像和卷（谨慎）
+docker system prune -a -f --volumes
+```
+
+---
+
+进入容器环境
+
+```
+# 进入正在运行的容器，打开 bash
+docker exec -it <容器名或容器ID> bash
+
+# 如果容器没有 bash，用 sh
+docker exec -it <容器名或容器ID> sh
+```
+
+
+
+
+
+突然发现自己几乎完全不熟docker，正好借着这个项目部署学习一下docker相关概念和操作
+
+简单来讲，docker的作用就是把程序及其运行环境封装在一起，成为一种“镜像”，并以容器的形式运行，从而保证应用在不同环境中具有一致的运行效果。同时，Docker 通过容器实现应用之间的隔离，使不同项目可以在同一台机器上独立运行而互不影响。（例如不同项目使用不同版本的mysql而不会出现冲突问题）
+
+具体的原理先不涉及，先拿我这个点评项目做实验，把前端nginx和后端业务代码封装到docker里面，学习一下dockers相关的操作
+
+这里我需要搭建四个容器：前端、后端、mysql、redis
+
+为什么是四个容器而不是直接把它们揉到一个容器里？
+
+在我现在这个项目里面其实主要还是为了解耦合，让各个服务各司其职。而且各个服务的生命周期、职责等都不太一样，分开更方便后续扩展、更新以及维护之类的东西，总而言之就是更方便管理
+
+让cursor给我写一下相关的dockerfile，然后`docker-compose up --build`构建，这里还有一点需要注意：
+**Dockerfile定义“一个容器怎么做出来”，docker-compose.yml定义“多个容器怎么一起跑”**
+
+再区分一下容器和镜像：
+
+| 对比点     | 镜像               | 容器           |
+| ---------- | ------------------ | -------------- |
+| 状态       | 静态               | 动态           |
+| 是否运行   | ❌                  | ✔              |
+| 是否可变   | ❌（只读）          | ✔              |
+| 占多少资源 | 少                 | 多（CPU/内存） |
+| 数量关系   | 1个镜像 → 多个容器 |                |
+
+简单解决了一下遇到的网络代理问题之后创建好了容器和镜像并启动：
+
+```
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker ps -a
+CONTAINER ID   IMAGE                         COMMAND                   CREATED         STATUS                            PORTS     NAMES
+5d7db99cfb66   hm-dianping_docker-frontend   "/docker-entrypoint.…"   2 minutes ago   Exited (0) About a minute ago               hm-dianping_docker-frontend-1
+8bec12a9ce9a   hm-dianping_docker-backend    "java -jar /app/app.…"   2 minutes ago   Exited (143) About a minute ago             hm-dianping_docker-backend-1
+4361db2d5893   redis:6-alpine                "docker-entrypoint.s…"   2 minutes ago   Exited (0) About a minute ago               hm-dianping_docker-redis-1
+aaa80d3c672a   mysql:5.7                     "docker-entrypoint.s…"   2 minutes ago   Exited (137) About a minute ago             hm-dianping_docker-mysql-1
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker images
+                                                                                                   i Info →   U  In Use
+IMAGE                                ID             DISK USAGE   CONTENT SIZE   EXTRA
+hm-dianping_docker-backend:latest    f30ccad12538        420MB          128MB    U
+hm-dianping_docker-frontend:latest   bcc4b883c616         88MB         26.5MB    U
+mysql:5.7                            4bc6bc963e6d        700MB          149MB    U
+nginx:1.25-alpine                    516475cc129d       75.4MB         21.7MB
+redis:6-alpine                       46884be93652       45.1MB         12.9MB    U
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker compose up -d
+[+] up 4/4
+ ✔ Container hm-dianping_docker-redis-1    Started                                                                  0.4s
+ ✔ Container hm-dianping_docker-mysql-1    Started                                                                  0.4s
+ ✔ Container hm-dianping_docker-backend-1  Started                                                                  0.3s
+ ✔ Container hm-dianping_docker-frontend-1 Started                                                                  0.3s
+
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker ps
+CONTAINER ID   IMAGE                         COMMAND                   CREATED         STATUS         PORTS                                         NAMES
+5d7db99cfb66   hm-dianping_docker-frontend   "/docker-entrypoint.…"   6 minutes ago   Up 5 seconds   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp   hm-dianping_docker-frontend-1
+8bec12a9ce9a   hm-dianping_docker-backend    "java -jar /app/app.…"   6 minutes ago   Up 5 seconds   0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp   hm-dianping_docker-backend-1
+4361db2d5893   redis:6-alpine                "docker-entrypoint.s…"   7 minutes ago   Up 5 seconds   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp   hm-dianping_docker-redis-1
+aaa80d3c672a   mysql:5.7                     "docker-entrypoint.s…"   7 minutes ago   Up 5 seconds   0.0.0.0:3307->3306/tcp, [::]:3307->3306/tcp   hm-dianping_docker-mysql-1
+```
+
+访问8080，可以看到前端页面，再看看网络请求是都没问题的：
+![image-20260326123426056](https://cdn.jsdelivr.net/gh/soapsama7/cdn_img@latest//post/202603261234224.png)
+
+可是这里依然会报服务器异常，也没法正确使用项目，这里要解决两个问题，不然项目没法跑起来
+
+第一个是build出来的mysql容器里面其实是空的，没有初始化相应的表结构
+
+第二个是build出来的redis容器里面没有初始创建`stream.orders`消息队列
+
+为了让项目跑起来，我先分别手动进入mysql和redis容器里面创建对应数据：
+
+```
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker exec -it hm-dianping_docker-redis-1 sh
+/data # ls
+dump.rdb
+/data # redis-cli
+127.0.0.1:6379> keys *
+(empty array)
+127.0.0.1:6379> XADD stream.orders * id 1 userId 123 voucherId 1001 amount 1 createTime "2026-03-26T10:30:00"
+"1774500129185-0"
+127.0.0.1:6379> keys *
+1) "stream.orders"
+127.0.0.1:6379>
+/data # exit
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker exec -it hm-dianping_docker-mysql-1 sh
+sh-4.2# mysql -u root -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 12
+Server version: 5.7.44 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> CREATE DATABASE hmdp;
+ERROR 1007 (HY000): Can't create database 'hmdp'; database exists
+mysql> SHOW DATABASES;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| hmdp               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.02 sec)
+
+mysql> USE hmdp
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> SHOW TABLES;\
++------------------+
+| Tables_in_hmdp   |
++------------------+
+| tb_blog          |
+| tb_blog_comments |
+| tb_follow        |
++------------------+
+3 rows in set (0.00 sec)
+
+mysql> DROP TABLE IF EXISTS tb_blog, tb_blog_comments, tb_follow;
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> SHOW TABLES;
+Empty set (0.00 sec)
+
+mysql> exit
+Bye
+sh-4.2# ^C
+sh-4.2# exit
+exit
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker exec -i hm-dianping_docker-mysql-1 mysql -u root -p hmdp < "C:\Users\soapsama\Downloads\hm-dianping_docker\hmdp.sql"
+Enter password: ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker exec -i hm-dianping_docker-mysql-1 mysql -u root -proot hmdp < "C:\Users\soapsama\Downloads\hm-dianping_docker\hmdp.sql"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
+C:\Users\soapsama\Downloads\hm-dianping_docker>docker exec -it hm-dianping_docker-mysql-1 sh
+sh-4.2# mysql -u root -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 15
+Server version: 5.7.44 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show datebases;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'datebases' at line 1
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| hmdp               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> use hmdp
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
++--------------------+
+| Tables_in_hmdp     |
++--------------------+
+| tb_blog            |
+| tb_blog_comments   |
+| tb_follow          |
+| tb_seckill_voucher |
+| tb_shop            |
+| tb_shop_type       |
+| tb_sign            |
+| tb_user            |
+| tb_user_info       |
+| tb_voucher         |
+| tb_voucher_order   |
++--------------------+
+11 rows in set (0.00 sec)
+```
+
+然后再看看，页面可以正常展示了：
+
+![image-20260326124719023](https://cdn.jsdelivr.net/gh/soapsama7/cdn_img@latest//post/202603261247449.png)
+
+不过我这边没做发验证码的逻辑，就不登录了
+
+还有一个小问题：上面那些种类项目点进去仍然报服务器异常，原因和上面一样，没有提前在redis里面准备GEO数据，导致前端请求的数据在redis容器里面不存在
+
+到了这里，我觉得没有必要再缝缝补补改容器了，我觉得应该直接改一下项目代码重新构建镜像，我想弄成只构建docker就可以运行，不用自己再搞这些操作。或者说只要让服务器不报错就行
+
+---
+
+主要就是三个地方：数据库、redis的GEO数据和消息队列
+
+这里面来看，redis的难度较低，所以先改它
+
+以前我是直接写了个测试方法，然后直接运行往redis里面加数据的
+
+```
+@Test
+    public void loadShopGeoData(){
+        List<Shop> shopList = shopService.list();
+        // 按照商户的类型Id分组，比如美食类一组、ktv类一组等
+        Map<Long, List<Shop>> map = shopList.stream().collect(Collectors.groupingBy(Shop::getTypeId));
+        // 分组完后分批写入Redis
+        for (Map.Entry<Long, List<Shop>> entry : map.entrySet()){
+            // 按照类型Id分组
+            Long typeId = entry.getKey();
+            String Key = SHOP_GEO_KEY + typeId;
+            List<Shop> shopValue = entry.getValue();
+            // 该list为Geo数据类型list
+            List<RedisGeoCommands.GeoLocation<String>> locations = new ArrayList<>(shopValue.size());
+            // 先写入locations，然后再统一写入Redis提升效率
+            for (Shop shop : shopValue){
+                locations.add(new RedisGeoCommands.GeoLocation<>(
+                        shop.getId().toString(),
+                        new Point(shop.getX(),shop.getY())
+                ));
+            }
+            stringRedisTemplate.opsForGeo().add(Key,locations);
+        }
+
+    }
+```
+
+那么，我先把本地redis存的GEO删了，来对着代码测试一下看看，比我预想的简单很多，其实就是这里的
+
+```
+ GeoResults<RedisGeoCommands.GeoLocation<String>> results =
+                stringRedisTemplate.opsForGeo().radius(
+                        Key,
+                        new Circle(new Point(x, y), new Distance(5000)),
+                        RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
+                                .includeDistance()
+                                .limit(end)
+                );
+```
+
+如果说redis里面不存在这个GEO Key的话，这里不会返回null，实际上还是会返回一个正常的GeoResults对象，但是`List<GeoResult<RedisGeoCommands.GeoLocation<String>>> list = results.getContent();`这里的list会得到一个空列表
+
+那么我改一下代码，若`list.isEmpty()`也返回空就不会抛异常了
+
+过
+
+---
+
+我在本地redis将`stream.orders`删除，然后在相应代码处打个断点调试一下，发现就是这个地方抛的异常（本质是Stream Key和消费者组g1都不存在）
+
+```
+List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
+                            Consumer.from("g1", "c1"),
+                            StreamReadOptions.empty().count(1).block(Duration.ofSeconds(2)),
+                            StreamOffset.create(queueName, ReadOffset.lastConsumed())
+                    );
+```
+
+然后因为没有对应的处理逻辑，这里又是无限循环，所以就一直无限循环抛异常了。那么只要添加对应的异常处理就可以解决
+
+相关Redis命令先贴在这，方便测试：
+
+```
+XGROUP CREATE stream.orders g1 $ MKSTREAM   // 添加stream和消费者组
+```
+
+慢慢改，最后改成了这样：
+
+```
+ private class VoucherOrderHandler implements Runnable{
+        // 为了学习方便就直接写这里了，实际项目看情况
+        private final String queueName = "stream.orders";
+        private final String groupName = "g1";
+        // 判断Redis中是否有相应Stream Key
+        public Boolean testRedisStreamKey() {
+            DataType type = stringRedisTemplate.type(queueName);
+            // 已经是 stream，直接返回
+            if (DataType.STREAM.equals(type)) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void run(){
+            while(running && !Thread.currentThread().isInterrupted()){
+                try {
+                    /*
+                        获取消息队列中的订单信息
+                        如果获取失败则继续循环读取
+                        如果获取成功则可以准备下单
+                     */
+                    List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
+                            Consumer.from(groupName, "c1"),
+                            StreamReadOptions.empty().count(1).block(Duration.ofSeconds(2)),
+                            StreamOffset.create(queueName, ReadOffset.lastConsumed())
+                    );
+                    if (list == null || list.isEmpty()){
+                        continue;
+                    }
+                    // 解析消息中的订单信息
+                    MapRecord<String, Object, Object> record = list.get(0);
+                    Map<Object, Object> values = record.getValue();
+                    VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(values, new VoucherOrder(), true);
+                    handleVoucherOrder(voucherOrder);
+                    // 完成后需要ACK确认消息已经被处理
+                    stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
+                } catch (Exception e) {
+                    // 如果是应用正在关闭，就直接退出
+                    if (!running || Thread.currentThread().isInterrupted()) {
+                        break;
+                    }
+                    // 如果是因为Stream Key没有被创建，则先创建一下
+                    if (!testRedisStreamKey()){
+                        // 不存在或类型不对：先删（不存在也没关系，不会报错）
+                        stringRedisTemplate.delete(queueName);
+                        // 创建消费组并带上 MKSTREAM 语义（底层会创建空 stream）
+                        stringRedisTemplate.opsForStream()
+                                    .createGroup(queueName, ReadOffset.latest(), groupName);
+                        log.error("Redis中不存在Stream Key，已创建");
+                        continue;
+                    }
+                    log.error("处理订单异常",e);
+                    // 如果处理消息的时候抛了异常，消息也就没有被成功ACK，需要从PEL里面再取出并处理
+                    handlePendingList();
+                }
+            }
+        }
+```
+
+看起来没啥问题了，本地这边删掉也能保证正常运行。等会跑个docker看看
+
+过
+
+---
+
+mysql那边我一开始还觉得可能是最复杂的，但实际上cursor帮我写的yml文件已经配好了：
+
+```
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hmdp
+      TZ: UTC
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/main/resources/db/hmdp.sql:/docker-entrypoint-initdb.d/hmdp.sql:ro
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_general_ci"]
+```
+
+在第一次初始化数据库时，会执行`/docker-entrypoint-initdb.d/hmdp.sql`文件，也就是做了自动初始化操作，我只用把`hmdp.sql`文件放在目录下即可
+
+然后完全删除现有的docker容器和镜像，重新构建，成了。再解决一些发包的问题（具体是`docker-compose.yml`里面的一些路径问题），用压缩包打包起来就可以发送了。到此为止吧
+
+
+
+
 
