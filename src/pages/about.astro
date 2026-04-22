@@ -1,34 +1,275 @@
 ---
-import { PageHeader } from "@components/features/page-header";
 import Markdown from "@components/misc/Markdown.astro";
 import { getEntry, render } from "astro:content";
 
-import I18nKey from "../i18n/i18nKey";
-import { i18n } from "../i18n/translation";
-import MainGridLayout from "../layouts/MainGridLayout.astro";
+import CornerLayout from "../layouts/CornerLayout.astro";
 
 const aboutPost = await getEntry("spec", "about");
-
 if (!aboutPost) {
 	throw new Error("About page content not found");
 }
 
 const { Content } = await render(aboutPost);
-const title = i18n(I18nKey.about);
 ---
-<MainGridLayout title={title}>
-	<!-- 引入右侧边栏布局管理器 -->
-  <script>
-    import('../scripts/right-sidebar-layout.js');
-  </script>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
-        <div class="card-base z-10 px-9 py-6 relative w-full">
-            <PageHeader title={title} />
-            
-            <!-- 从MD文件读取的内容 -->
-            <Markdown class="mt-2">
-                <Content />
-            </Markdown>
-        </div>
-    </div>
-</MainGridLayout>
+
+<CornerLayout current="about" title="关于">
+	<section id="corner-about" class="corner-blog corner-about">
+		<div id="corner-about-markdown">
+			<Markdown class="markdown-content corner-about-content">
+				<Content />
+			</Markdown>
+		</div>
+	</section>
+</CornerLayout>
+
+<script>
+	type SectionNode = {
+		heading: HTMLElement;
+		level: number;
+		parent: SectionNode | null;
+		children: SectionNode[];
+		contentWrapper: HTMLDivElement;
+		expanded: boolean;
+	};
+
+	function setupAboutAccordion() {
+		const container = document.getElementById("corner-about-markdown");
+		if (!container) {
+			return;
+		}
+		if (container.dataset.accordionReady === "true") {
+			return;
+		}
+
+		const markdownRoot =
+			container.querySelector(".custom-md") || container.firstElementChild;
+		if (!(markdownRoot instanceof HTMLElement)) {
+			return;
+		}
+
+		const getLevel = (el: HTMLElement) => {
+			const m = el.tagName.match(/^H([1-6])$/);
+			return m ? Number(m[1]) : null;
+		};
+
+		const blocks = Array.from(markdownRoot.children).filter(
+			(el): el is HTMLElement => el instanceof HTMLElement,
+		);
+		if (blocks.length === 0) {
+			return;
+		}
+
+		const nodes: SectionNode[] = [];
+		const stack: SectionNode[] = [];
+
+		// 先显示没有标题的前置内容（intro）
+		for (const block of blocks) {
+			let heading: HTMLElement | null = null;
+			if (/^H[1-6]$/.test(block.tagName)) {
+				heading = block;
+			} else {
+				heading = block.querySelector(
+					":scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6",
+				);
+			}
+
+			if (!heading) {
+				block.style.display = "";
+				block.classList.add("about-intro");
+				continue;
+			}
+
+			const level = getLevel(heading);
+			if (!level) {
+				continue;
+			}
+
+			const sectionContent = Array.from(block.children).filter(
+				(el): el is HTMLElement => el instanceof HTMLElement && el !== heading,
+			);
+
+			const contentWrapper = document.createElement("div");
+			contentWrapper.className = "about-node-content";
+			contentWrapper.style.maxHeight = "0px";
+			contentWrapper.style.opacity = "0";
+			contentWrapper.style.overflow = "hidden";
+
+			if (sectionContent.length > 0) {
+				block.insertBefore(contentWrapper, sectionContent[0]);
+				sectionContent.forEach((el) => contentWrapper.appendChild(el));
+			} else {
+				block.appendChild(contentWrapper);
+			}
+
+			const node: SectionNode = {
+				heading,
+				level,
+				parent: null,
+				children: [],
+				contentWrapper,
+				expanded: false,
+			};
+
+			while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+				stack.pop();
+			}
+
+			if (stack.length > 0) {
+				const parent = stack[stack.length - 1];
+				node.parent = parent;
+				parent.children.push(node);
+			}
+
+			nodes.push(node);
+			stack.push(node);
+		}
+
+		if (nodes.length === 0) {
+			return;
+		}
+
+		const rootNodes = nodes.filter((n) => n.parent === null);
+		const pinnedIntroNode = nodes[0];
+
+		const setContentVisible = (
+			node: SectionNode,
+			visible: boolean,
+			immediate = false,
+		) => {
+			const el = node.contentWrapper;
+			const apply = () => {
+				if (visible) {
+					const targetHeight = el.scrollHeight;
+					el.style.maxHeight = `${targetHeight}px`;
+					el.style.opacity = "1";
+				} else {
+					const currentHeight = el.scrollHeight;
+					el.style.maxHeight = `${currentHeight}px`;
+					requestAnimationFrame(() => {
+						el.style.maxHeight = "0px";
+						el.style.opacity = "0";
+					});
+				}
+			};
+
+			if (immediate) {
+				if (visible) {
+					el.style.maxHeight = "none";
+					el.style.opacity = "1";
+				} else {
+					el.style.maxHeight = "0px";
+					el.style.opacity = "0";
+				}
+				return;
+			}
+
+			requestAnimationFrame(apply);
+		};
+
+		const hideDescendants = (node: SectionNode) => {
+			node.children.forEach((child) => {
+				child.heading.style.display = "none";
+				setContentVisible(child, false);
+				child.expanded = false;
+				hideDescendants(child);
+				updateHeadingState(child);
+			});
+		};
+
+		const showDirectChildren = (node: SectionNode) => {
+			node.children.forEach((child) => {
+				child.heading.style.display = "";
+			});
+		};
+
+		const updateHeadingState = (node: SectionNode) => {
+			node.heading.classList.toggle("about-heading-expanded", node.expanded);
+			node.heading.classList.toggle("about-heading-collapsed", !node.expanded);
+		};
+
+		const toggleNode = (node: SectionNode) => {
+			// 第一段标题块固定展开，不参与折叠
+			if (node === pinnedIntroNode) {
+				return;
+			}
+			const willExpand = !node.expanded;
+			const siblings = node.parent ? node.parent.children : rootNodes;
+
+			if (!willExpand) {
+				node.expanded = false;
+				setContentVisible(node, false);
+				hideDescendants(node);
+				updateHeadingState(node);
+				return;
+			}
+
+			// 同级互斥：展开当前节点前先收起同级其他节点
+			siblings.forEach((sibling) => {
+				if (sibling === node || sibling === pinnedIntroNode) {
+					return;
+				}
+				sibling.expanded = false;
+				setContentVisible(sibling, false);
+				hideDescendants(sibling);
+				updateHeadingState(sibling);
+			});
+
+			node.expanded = true;
+			updateHeadingState(node);
+
+			if (node.children.length > 0) {
+				showDirectChildren(node);
+			} else {
+				setContentVisible(node, true);
+			}
+		};
+
+		// init visibility
+		nodes.forEach((node) => {
+			node.heading.classList.add("about-heading", "about-heading-collapsed");
+			node.heading.style.display = node.parent ? "none" : "";
+			setContentVisible(node, false, true);
+		});
+
+		rootNodes.forEach((node) => {
+			node.heading.style.display = "";
+		});
+
+		// 第一段标题 + 正文默认展示，模拟 aza.moe/about 的顶部介绍段
+		if (pinnedIntroNode) {
+			pinnedIntroNode.expanded = true;
+			pinnedIntroNode.heading.classList.add("about-heading-pinned");
+			pinnedIntroNode.heading.classList.remove("about-heading-collapsed");
+			pinnedIntroNode.heading.classList.add("about-heading-expanded");
+			setContentVisible(pinnedIntroNode, true, true);
+		}
+
+		nodes.forEach((node) => {
+			node.heading.addEventListener("click", () => {
+				toggleNode(node);
+			});
+		});
+
+		container.dataset.accordionReady = "true";
+	}
+
+	function initAboutAccordion() {
+		setupAboutAccordion();
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initAboutAccordion, {
+			once: true,
+		});
+	} else {
+		initAboutAccordion();
+	}
+	document.addEventListener("astro:page-load", initAboutAccordion);
+	document.addEventListener("swup:pageView", initAboutAccordion);
+	document.addEventListener("swup:page:view", initAboutAccordion);
+
+	const swup = (window as Window & { swup?: { hooks?: { on?: (event: string, cb: () => void) => void } } }).swup;
+	if (swup?.hooks?.on) {
+		swup.hooks.on("page:view", initAboutAccordion);
+	}
+</script>

@@ -1,0 +1,270 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+
+import Markdown from "../../components/misc/Markdown.astro";
+import CornerLayout from "../../layouts/CornerLayout.astro";
+import { getSortedPosts } from "../../utils/content-utils";
+import { removeFileExtension } from "../../utils/url-utils";
+
+interface Props {
+	entry: CollectionEntry<"posts">;
+}
+
+interface TocGroup {
+	root: { slug: string; text: string; depth: number };
+	children: { slug: string; text: string; depth: number }[];
+}
+
+const cleanTocText = (text: string) =>
+	text
+		.replace(/^#+\s*/, "")
+		.replace(/\s*#+\s*$/, "")
+		.trim();
+
+export async function getStaticPaths() {
+	const posts = await getSortedPosts();
+	return posts.map((entry) => ({
+		params: { slug: removeFileExtension(entry.id) },
+		props: { entry },
+	}));
+}
+
+const { entry } = Astro.props as Props;
+const { Content, headings } = await render(entry);
+const topDepth = headings.length > 0 ? Math.min(...headings.map((h) => h.depth)) : 0;
+const tocGroups: TocGroup[] = [];
+let activeGroup: TocGroup | null = null;
+
+for (const heading of headings) {
+	if (heading.depth === topDepth) {
+		activeGroup = {
+			root: { slug: heading.slug, text: heading.text, depth: heading.depth },
+			children: [],
+		};
+		tocGroups.push(activeGroup);
+		continue;
+	}
+
+	if (!activeGroup) {
+		activeGroup = {
+			root: { slug: heading.slug, text: heading.text, depth: heading.depth },
+			children: [],
+		};
+		tocGroups.push(activeGroup);
+		continue;
+	}
+
+	activeGroup.children.push({
+		slug: heading.slug,
+		text: heading.text,
+		depth: heading.depth,
+	});
+}
+---
+
+<CornerLayout current="blog" title={entry.data.title}>
+	<div class="corner-post-layout">
+		<article class="corner-post">
+			<div class="corner-card">
+				<div class="corner-date">
+					{new Date(entry.data.published).toISOString().slice(0, 10)}
+				</div>
+				<h1 class="corner-title">{entry.data.title}</h1>
+				{entry.data.description && (
+					<p class="corner-subtitle" style="margin: 0.5rem 0 1rem;">
+						{entry.data.description}
+					</p>
+				)}
+				<Markdown class="markdown-content">
+					<Content />
+				</Markdown>
+			</div>
+		</article>
+		{tocGroups.length > 0 && (
+			<aside class="corner-toc" aria-label="文章目录">
+				<div class="corner-toc-title">目录</div>
+				<nav>
+					{
+						tocGroups.map((group, index) => (
+							<div class="corner-toc-group" data-index={index}>
+								<a
+									href={`#${group.root.slug}`}
+									class="corner-toc-link corner-toc-root-link"
+									data-role="toc-root"
+									data-no-swup
+									aria-expanded="false"
+									aria-controls={`toc-group-${index}`}
+								>
+									{cleanTocText(group.root.text)}
+								</a>
+								{group.children.length > 0 && (
+									<div class="corner-toc-children" id={`toc-group-${index}`}>
+										{
+											group.children.map((child) => (
+												<a
+													href={`#${child.slug}`}
+													class:list={[
+														"corner-toc-link",
+														`depth-${Math.min(
+															child.depth - topDepth + 1,
+															3,
+														)}`,
+													]}
+													data-no-swup
+												>
+													{cleanTocText(child.text)}
+												</a>
+											))
+										}
+									</div>
+								)}
+							</div>
+						))
+					}
+				</nav>
+			</aside>
+		)}
+	</div>
+</CornerLayout>
+
+<script>
+	import { initFancybox } from "../../scripts/handlers/fancybox-handler";
+
+	function preparePostImagesForZoom() {
+		const imgs = Array.from(
+			document.querySelectorAll<HTMLImageElement>(".custom-md img"),
+		);
+
+		imgs.forEach((img, index) => {
+			const parent = img.parentElement;
+			if (!parent) {
+				return;
+			}
+
+			// 已经是链接图片则直接补充 fancybox 属性
+			if (parent.tagName === "A") {
+				const link = parent as HTMLAnchorElement;
+				link.setAttribute("data-fancybox", "post-gallery");
+				if (!link.getAttribute("href")) {
+					link.setAttribute("href", img.currentSrc || img.src);
+				}
+				return;
+			}
+
+			const link = document.createElement("a");
+			link.href = img.currentSrc || img.src;
+			link.setAttribute("data-fancybox", "post-gallery");
+			link.setAttribute("data-src", img.currentSrc || img.src);
+			link.setAttribute("aria-label", img.alt || `post-image-${index + 1}`);
+			link.style.cursor = "zoom-in";
+
+			parent.insertBefore(link, img);
+			link.appendChild(img);
+		});
+	}
+
+	async function setupPostImageZoom() {
+		preparePostImagesForZoom();
+		await initFancybox();
+	}
+
+	function setupTocAccordion() {
+		const toc = document.querySelector<HTMLElement>(".corner-toc");
+		if (!toc) return;
+		if (toc.dataset.bound === "true") return;
+		toc.dataset.bound = "true";
+
+		const getGroups = () =>
+			Array.from(toc.querySelectorAll<HTMLElement>(".corner-toc-group"));
+
+		const collapseAll = () => {
+			getGroups().forEach((group) => {
+				group.classList.remove("expanded");
+				const root = group.querySelector<HTMLElement>("[data-role='toc-root']");
+				root?.setAttribute("aria-expanded", "false");
+			});
+		};
+
+		const jumpToAnchor = (hash: string) => {
+			const rawId = hash.replace(/^#/, "");
+			if (!rawId) return;
+
+			const candidates = new Set<string>([rawId]);
+			try {
+				candidates.add(decodeURIComponent(rawId));
+			} catch {
+				// ignore malformed uri
+			}
+			try {
+				candidates.add(encodeURIComponent(rawId));
+			} catch {
+				// ignore encode failure
+			}
+
+			let target: HTMLElement | null = null;
+			for (const id of candidates) {
+				target =
+					document.getElementById(id) ||
+					(document.querySelector(`[id="${CSS.escape(id)}"]`) as HTMLElement | null);
+				if (target) break;
+			}
+			if (!target) return;
+			target.scrollIntoView({ behavior: "smooth", block: "start" });
+			history.replaceState(null, "", `#${encodeURIComponent(target.id)}`);
+		};
+
+		toc.addEventListener("click", (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) return;
+
+			const rootLink = target.closest<HTMLAnchorElement>(".corner-toc-root-link");
+			if (rootLink && toc.contains(rootLink)) {
+				event.preventDefault();
+				const group = rootLink.closest<HTMLElement>(".corner-toc-group");
+				if (!group) return;
+				const expanded = group.classList.contains("expanded");
+				collapseAll();
+				if (!expanded) {
+					group.classList.add("expanded");
+					rootLink.setAttribute("aria-expanded", "true");
+				} else {
+					group.classList.add("expanded");
+					rootLink.setAttribute("aria-expanded", "true");
+				}
+				jumpToAnchor(rootLink.hash);
+				return;
+			}
+
+			const childLink = target.closest<HTMLAnchorElement>(
+				".corner-toc-children a[href^='#']",
+			);
+			if (childLink && toc.contains(childLink)) {
+				event.preventDefault();
+				jumpToAnchor(childLink.hash);
+			}
+		});
+	}
+
+	function initPostEnhancements() {
+		setupPostImageZoom();
+		setupTocAccordion();
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initPostEnhancements, {
+			once: true,
+		});
+	} else {
+		initPostEnhancements();
+	}
+
+	document.addEventListener("astro:page-load", initPostEnhancements);
+	document.addEventListener("swup:pageView", initPostEnhancements);
+	document.addEventListener("swup:page:view", initPostEnhancements);
+
+	const swup = (window as Window & { swup?: { hooks?: { on?: (event: string, cb: () => void) => void } } }).swup;
+	if (swup?.hooks?.on) {
+		swup.hooks.on("page:view", initPostEnhancements);
+	}
+</script>

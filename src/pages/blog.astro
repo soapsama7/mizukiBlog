@@ -1,0 +1,31 @@
+---
+import { getSortedPostsList } from "../utils/content-utils";
+import CornerLayout from "../layouts/CornerLayout.astro";
+import { removeFileExtension } from "../utils/url-utils";
+
+const posts = await getSortedPostsList();
+---
+
+<CornerLayout current="blog" title="Blog">
+	<section class="corner-blog">
+		<div>
+			<h2>文章</h2>
+			<div class="corner-subtitle">一些思考与记录，值得被认真保存</div>
+		</div>
+		{
+			posts.map((post) => (
+				<article class="corner-card">
+					<div class="corner-date">
+						{new Date(post.data.published).toISOString().slice(0, 10)}
+					</div>
+					<a class="corner-title" href={`/blog/${removeFileExtension(post.id)}/`}>
+						{post.data.title}
+					</a>
+					{post.data.description && (
+						<div class="corner-excerpt">{post.data.description}</div>
+					)}
+				</article>
+			))
+		}
+	</section>
+</CornerLayout>

@@ -21,6 +21,7 @@ import "../styles/wallpaper-navbar-transparent.css";
 import "../styles/fancybox-custom.css";
 import "../styles/expressive-code.css";
 import "../styles/panel-animations.css";
+import "../styles/corner-theme.css";
 
 // 导入新提取的 Head 组件
 import AnalyticsScripts from "./partials/AnalyticsScripts.astro";
@@ -204,7 +205,7 @@ if (siteConfig.font) {
 	<body
 		class="min-h-screen"
 		class:list={[
-			{ "lg:is-home": isHomePage, "enable-banner": enableBanner },
+			{ "lg:is-home": isHomePage, "enable-banner": enableBanner, "corner-theme": true },
 		]}
 		style={bodyFontFamily ? `font-family: ${bodyFontFamily};` : ""}
 		data-overlayscrollbars-initialize

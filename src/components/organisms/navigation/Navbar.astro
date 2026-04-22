@@ -41,8 +41,37 @@ const logoSrc = rawLogo.match(/^(http|https|\/\/)/) ? rawLogo : url(rawLogo);
 
 const rawIcon = siteConfig.navbarTitle?.icon || "/assets/home/home.png";
 const iconSrc = rawIcon.match(/^(http|https|\/\/)/) ? rawIcon : url(rawIcon);
+
+const cornerNavLinks = links.filter((link) => !link.external).slice(0, 6);
+const currentPath = Astro.url.pathname;
+const isCornerLinkActive = (linkUrl: string) => {
+	const targetPath = url(linkUrl);
+	if (targetPath === "/") {
+		return currentPath === "/";
+	}
+	return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+};
 ---
 <div id="navbar" class="z-50 onload-animation group" data-transparent-mode={navbarTransparentMode} data-is-home={isHomePage}>
+    <aside id="corner-nav-rail" class="hidden lg:flex flex-col items-center">
+        <div class="corner-nav-bg"></div>
+        <div class="corner-nav-items">
+            <div id="corner-nav-bookmark" aria-hidden="true"></div>
+            {cornerNavLinks.map((link) => (
+                <>
+                    <a
+                        href={url(link.url)}
+                        data-corner-link
+                        class:list={["corner-nav-link", { "is-active": isCornerLinkActive(link.url) }]}
+                    >
+                        {link.name}
+                    </a>
+                    <span class="corner-nav-dot">·</span>
+                </>
+            ))}
+        </div>
+        <img id="corner-nav-avatar" src="/assets/home/home.png" alt="corner nav avatar" loading="lazy" />
+    </aside>
     <div class="absolute h-8 left-0 right-0 -top-8 bg-[var(--card-bg)] transition"></div> <!-- used for onload animation -->
     <div class:list={[className, "!overflow-visible max-w-[var(--page-width)] h-[4.5rem] mx-auto flex items-center justify-between px-4"]}>
         <a href={url('/')} class="btn-plain scale-animation rounded-lg h-[2.5rem] md:h-[3.25rem] md:[.enable-banner_&]:h-[2.5rem] md:[.enable-banner_&]:group-[.scrolled]:h-[3.25rem] px-5 font-bold active:scale-95 shrink-0 transition-all duration-300">
@@ -191,6 +220,37 @@ async function loadButtonScript() {
 
 loadButtonScript();
 
+function initCornerNavBookmark() {
+	const rail = document.getElementById("corner-nav-rail");
+	const bookmark = document.getElementById("corner-nav-bookmark");
+	if (!rail || !bookmark) {return;}
+
+	const links = Array.from(
+		rail.querySelectorAll<HTMLAnchorElement>("[data-corner-link]"),
+	);
+	if (links.length === 0) {return;}
+
+	const updateBookmarkPosition = () => {
+		const activeLink =
+			links.find((link) => link.classList.contains("is-active")) || links[0];
+
+		if (!activeLink) {return;}
+
+		const railRect = rail.getBoundingClientRect();
+		const linkRect = activeLink.getBoundingClientRect();
+		const top = linkRect.top - railRect.top + linkRect.height / 2 - 14;
+
+		bookmark.style.opacity = "1";
+		bookmark.style.transform = `translateY(${Math.max(0, top)}px)`;
+	};
+
+	updateBookmarkPosition();
+	window.addEventListener("resize", updateBookmarkPosition, { passive: true });
+
+	// 页面切换后重新计算，避免 Swup 过渡导致位置漂移
+	setTimeout(updateBookmarkPosition, 80);
+}
+
 // 为semifull模式添加滚动检测逻辑
 function initSemifullScrollDetection() {
     const navbar = document.getElementById('navbar');
@@ -253,8 +313,10 @@ window.initSemifullScrollDetection = initSemifullScrollDetection;
 // 页面加载完成后初始化滚动检测
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSemifullScrollDetection);
+    document.addEventListener('DOMContentLoaded', initCornerNavBookmark);
 } else {
     initSemifullScrollDetection();
+    initCornerNavBookmark();
 }
 </script>
 

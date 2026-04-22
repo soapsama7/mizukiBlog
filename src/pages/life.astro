@@ -1,0 +1,25 @@
+---
+import CornerLayout from "../layouts/CornerLayout.astro";
+import { getDiaryList } from "../data/diary";
+
+const diaryList = getDiaryList();
+---
+
+<CornerLayout current="life" title="生活">
+	<section class="corner-blog">
+		<h2>生活</h2>
+		<div class="corner-subtitle">一些日常碎片</div>
+		{
+			diaryList.length === 0 ? (
+				<article class="corner-card">还没有内容</article>
+			) : (
+				diaryList.map((item) => (
+					<article class="corner-card">
+						<div class="corner-date">{new Date(item.date).toISOString().slice(0, 10)}</div>
+						<div class="corner-excerpt">{item.content}</div>
+					</article>
+				))
+			)
+		}
+	</section>
+</CornerLayout>
