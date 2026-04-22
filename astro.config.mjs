@@ -34,6 +34,9 @@ export default defineConfig({
 	site: siteConfig.siteURL,
 	base: "/",
 	trailingSlash: "always",
+	devToolbar: {
+		enabled: false,
+	},
 
 	output: "static",
 

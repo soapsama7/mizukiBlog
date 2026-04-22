@@ -1,0 +1,14 @@
+---
+import CornerLayout from "./CornerLayout.astro";
+
+interface Props {
+	title?: string;
+	current?: string;
+}
+
+const { title, current } = Astro.props as Props;
+---
+
+<CornerLayout title={title} current={current}>
+	<slot />
+</CornerLayout>

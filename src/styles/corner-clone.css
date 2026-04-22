@@ -37,6 +37,111 @@ body.corner-clone {
 	background: rgba(255, 255, 255, 0.9);
 }
 
+#aza-player {
+	position: fixed;
+	right: 18px;
+	bottom: 18px;
+	z-index: 230;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.82);
+	border: 1px solid rgba(166, 134, 89, 0.25);
+	backdrop-filter: blur(5px);
+	max-width: min(90vw, 340px);
+}
+
+#aza-player button {
+	border: 0;
+	background: rgba(255, 240, 220, 0.9);
+	color: #70512a;
+	border-radius: 8px;
+	width: 30px;
+	height: 30px;
+	cursor: pointer;
+}
+
+#aza-player-meta {
+	min-width: 0;
+	flex: 1 1 140px;
+}
+
+#aza-player-title {
+	font-size: 0.8rem;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#aza-player-artist {
+	font-size: 0.72rem;
+	opacity: 0.82;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#aza-player-progress-wrap {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+#aza-player-progress {
+	width: 100%;
+}
+
+#aza-player-time {
+	font-size: 0.68rem;
+	opacity: 0.75;
+	text-align: right;
+}
+
+#aza-player-list-panel {
+	width: 100%;
+	max-height: 180px;
+	overflow: auto;
+	border-top: 1px dashed rgba(166, 134, 89, 0.25);
+	padding-top: 6px;
+}
+
+#aza-player-list-panel.collapsed {
+	display: none;
+}
+
+#aza-player-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#aza-player-list li + li {
+	margin-top: 4px;
+}
+
+#aza-player-list button {
+	width: 100%;
+	height: auto;
+	padding: 6px 8px;
+	border-radius: 6px;
+	text-align: left;
+	background: rgba(255, 246, 233, 0.95);
+	font-size: 0.72rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#aza-player-list button.active {
+	background: rgba(255, 228, 204, 0.95);
+	font-weight: 700;
+}
+
 body.corner-clone.dark-mode {
 	background: #1e1a17;
 	color: #d5c2a2;
@@ -46,6 +151,28 @@ body.corner-clone.dark-mode #corner-theme-toggle {
 	background: rgba(35, 31, 28, 0.85);
 	border-color: rgba(213, 194, 162, 0.3);
 	color: #f2dfbe;
+}
+
+body.corner-clone.dark-mode #aza-player {
+	background: rgba(35, 31, 28, 0.9);
+	border-color: rgba(213, 194, 162, 0.28);
+}
+
+body.corner-clone.dark-mode #aza-player button {
+	background: rgba(74, 61, 50, 0.9);
+	color: #f2dfbe;
+}
+
+body.corner-clone.dark-mode #aza-player-list-panel {
+	border-top-color: rgba(213, 194, 162, 0.24);
+}
+
+body.corner-clone.dark-mode #aza-player-list button {
+	background: rgba(58, 49, 41, 0.95);
+}
+
+body.corner-clone.dark-mode #aza-player-list button.active {
+	background: rgba(86, 70, 56, 0.95);
 }
 
 body.corner-clone.dark-mode #corner-nav-background {
@@ -500,6 +627,11 @@ body.corner-clone.dark-mode .corner-pill.active {
 @media (max-width: 1320px) {
 	.corner-toc {
 		display: none;
+	}
+	#aza-player {
+		right: 10px;
+		bottom: 10px;
+		max-width: calc(100vw - 20px);
 	}
 }
 

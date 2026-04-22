@@ -1,7 +1,8 @@
 ---
 import Markdown from "@components/misc/Markdown.astro";
-import CornerLayout from "@layouts/CornerLayout.astro";
+import AzaMOELayout from "@layouts/AzaMOELayout.astro";
 import { getEntry, render } from "astro:content";
+import { themeTextConfig } from "../config";
 
 import { getShuffledFriendsList } from "../data/friends";
 
@@ -15,10 +16,10 @@ const { Content } = await render(friendsPost);
 const friendsList = getShuffledFriendsList();
 ---
 
-<CornerLayout current="friends" title="友链">
+<AzaMOELayout current="friends" title={themeTextConfig.pages.friends.title}>
 	<section class="corner-blog">
-		<h2>友链</h2>
-		<div class="corner-subtitle">记录一起写博客的朋友们</div>
+		<h2>{themeTextConfig.pages.friends.title}</h2>
+		<div class="corner-subtitle">{themeTextConfig.pages.friends.subtitle}</div>
 		<div class="corner-grid">
 			{
 				friendsList.map((item) => (
@@ -42,4 +43,4 @@ const friendsList = getShuffledFriendsList();
 			</Markdown>
 		</article>
 	</section>
-</CornerLayout>
+</AzaMOELayout>

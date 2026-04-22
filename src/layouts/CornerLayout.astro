@@ -1,32 +1,18 @@
 ---
-import { siteConfig } from "../config";
-import { url } from "../utils/url-utils";
-import "../styles/corner-clone.css";
+import { musicPlayerConfig, siteConfig, themeTextConfig } from "../config";
+import "../styles/azamoe-theme.css";
 import "../styles/fancybox-custom.css";
-
-interface CornerNavItem {
-	label: string;
-	href: string;
-	key: string;
-}
 
 interface Props {
 	title?: string;
 	current?: string;
 }
 
-const { title = siteConfig.title, current = "home" } = Astro.props;
-
-const navItems: CornerNavItem[] = [
-	{ label: "友链", href: url("/friends/"), key: "friends" },
-	{ label: "相册", href: url("/albums/"), key: "albums" },
-	{ label: "文章", href: url("/blog/"), key: "blog" },
-	{ label: "生活", href: url("/life/"), key: "life" },
-	{ label: "关于", href: url("/about/"), key: "about" },
-	{ label: "主页", href: url("/"), key: "home" },
-];
-
-const fullTitle = current === "home" ? `Aza - Home` : `Aza - ${title}`;
+const { title = "AzaMOE", current = "home" } = Astro.props;
+const navItems = themeTextConfig.navItems;
+const fullTitle = current === "home"
+	? `${siteConfig.title} - ${themeTextConfig.pages.home.title}`
+	: `${siteConfig.title} - ${title}`;
 ---
 
 <!doctype html>
@@ -34,6 +20,7 @@ const fullTitle = current === "home" ? `Aza - Home` : `Aza - ${title}`;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" href={siteConfig.favicon} />
 		<title>{fullTitle}</title>
 	</head>
 	<body class="corner-clone">
@@ -69,6 +56,50 @@ const fullTitle = current === "home" ? `Aza - Home` : `Aza - ${title}`;
 		<main id="corner-main">
 			<slot />
 		</main>
+		{musicPlayerConfig.enable && (
+			<div
+				id="aza-player"
+				data-playlist={JSON.stringify(musicPlayerConfig.playlist)}
+				data-mode={musicPlayerConfig.mode}
+				data-autoplay={musicPlayerConfig.autoplay ? "true" : "false"}
+				data-loop={musicPlayerConfig.loop || "all"}
+				data-volume={String(musicPlayerConfig.defaultVolume ?? 0.65)}
+				data-empty-title={musicPlayerConfig.emptyState?.title || "暂无可播放音乐"}
+				data-empty-artist={musicPlayerConfig.emptyState?.artist || "请检查音乐配置"}
+			>
+				<button id="aza-player-toggle" type="button" aria-label="播放或暂停">▶</button>
+				<div id="aza-player-meta">
+					<div id="aza-player-title">
+						{musicPlayerConfig.playlist[0]?.title || musicPlayerConfig.emptyState?.title || "暂无可播放音乐"}
+					</div>
+					<div id="aza-player-artist">
+						{musicPlayerConfig.playlist[0]?.artist || musicPlayerConfig.emptyState?.artist || "请检查音乐配置"}
+					</div>
+				</div>
+				<button id="aza-player-next" type="button" aria-label="下一首">»</button>
+				<button id="aza-player-list-toggle" type="button" aria-label="展开歌单">≡</button>
+				<div id="aza-player-progress-wrap">
+					<input
+						id="aza-player-progress"
+						type="range"
+						min="0"
+						max="1000"
+						step="1"
+						value="0"
+						aria-label="播放进度"
+					/>
+					<div id="aza-player-time">00:00 / 00:00</div>
+				</div>
+				<div id="aza-player-list-panel" class="collapsed">
+					<ul id="aza-player-list" />
+				</div>
+				<audio
+					id="aza-player-audio"
+					preload="none"
+					src={musicPlayerConfig.playlist[0]?.src || ""}
+				/>
+			</div>
+		)}
 	</body>
 </html>
 
@@ -183,22 +214,174 @@ const fullTitle = current === "home" ? `Aza - Home` : `Aza - ${title}`;
 		});
 	}
 
+	function setupAzaMusicPlayer() {
+		const root = document.getElementById("aza-player");
+		if (!root || root.dataset.bound === "true") return;
+		root.dataset.bound = "true";
+
+		const audio = document.getElementById("aza-player-audio") as HTMLAudioElement | null;
+		const toggle = document.getElementById("aza-player-toggle") as HTMLButtonElement | null;
+		const next = document.getElementById("aza-player-next") as HTMLButtonElement | null;
+		const listToggle = document.getElementById("aza-player-list-toggle") as HTMLButtonElement | null;
+		const titleEl = document.getElementById("aza-player-title");
+		const artistEl = document.getElementById("aza-player-artist");
+		const progress = document.getElementById("aza-player-progress") as HTMLInputElement | null;
+		const timeEl = document.getElementById("aza-player-time");
+		const listPanel = document.getElementById("aza-player-list-panel");
+		const listEl = document.getElementById("aza-player-list");
+		if (!audio || !toggle || !next || !listToggle || !titleEl || !artistEl || !progress || !timeEl || !listPanel || !listEl) return;
+
+		const raw = root.getAttribute("data-playlist");
+		if (!raw) return;
+		const playlist = JSON.parse(raw) as Array<{ title: string; artist?: string; src: string }>;
+		if (!Array.isArray(playlist)) return;
+		const mode = root.getAttribute("data-mode") || "local";
+		const autoplay = root.getAttribute("data-autoplay") === "true";
+		const loopMode = root.getAttribute("data-loop") || "all";
+		const initVolume = Number(root.getAttribute("data-volume") || "0.65");
+		const emptyTitle = root.getAttribute("data-empty-title") || "暂无可播放音乐";
+		const emptyArtist = root.getAttribute("data-empty-artist") || "请检查音乐配置";
+
+		let idx = 0;
+		let seeking = false;
+		audio.volume = Number.isFinite(initVolume) ? Math.min(Math.max(initVolume, 0), 1) : 0.65;
+		audio.loop = loopMode === "one";
+
+		const formatTime = (s: number) => {
+			if (!Number.isFinite(s) || s < 0) return "00:00";
+			const sec = Math.floor(s);
+			const m = Math.floor(sec / 60);
+			const r = sec % 60;
+			return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+		};
+
+		const updateProgress = () => {
+			const duration = audio.duration;
+			const current = audio.currentTime;
+			if (!seeking) {
+				if (Number.isFinite(duration) && duration > 0) {
+					progress.value = String(Math.round((current / duration) * 1000));
+				} else {
+					progress.value = "0";
+				}
+			}
+			timeEl.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+		};
+
+		const renderPlaylist = () => {
+			listEl.innerHTML = "";
+			playlist.forEach((track, i) => {
+				const li = document.createElement("li");
+				const btn = document.createElement("button");
+				btn.type = "button";
+				btn.className = i === idx ? "active" : "";
+				btn.textContent = `${track.title}${track.artist ? ` - ${track.artist}` : ""}`;
+				btn.addEventListener("click", () => loadTrack(i, true));
+				li.appendChild(btn);
+				listEl.appendChild(li);
+			});
+		};
+
+		const syncMeta = () => {
+			const currentTrack = playlist[idx];
+			titleEl.textContent = currentTrack?.title || emptyTitle;
+			artistEl.textContent = currentTrack?.artist || emptyArtist;
+			toggle.textContent = audio.paused ? "▶" : "❚❚";
+			renderPlaylist();
+			updateProgress();
+		};
+
+		const loadTrack = (nextIdx: number, autoplay = false) => {
+			if (playlist.length === 0) return;
+			idx = (nextIdx + playlist.length) % playlist.length;
+			audio.src = playlist[idx].src;
+			syncMeta();
+			if (autoplay) {
+				audio.play().catch(() => {});
+			}
+		};
+
+		toggle.addEventListener("click", () => {
+			if (!audio.src && playlist.length > 0) {
+				loadTrack(idx, false);
+			}
+			if (audio.paused) {
+				audio.play().catch(() => {});
+			} else {
+				audio.pause();
+			}
+		});
+
+		next.addEventListener("click", () => {
+			if (playlist.length === 0) return;
+			loadTrack(idx + 1, !audio.paused);
+		});
+		listToggle.addEventListener("click", () => {
+			listPanel.classList.toggle("collapsed");
+		});
+		progress.addEventListener("pointerdown", () => {
+			seeking = true;
+		});
+		progress.addEventListener("pointerup", () => {
+			const duration = audio.duration;
+			if (Number.isFinite(duration) && duration > 0) {
+				audio.currentTime = (Number(progress.value) / 1000) * duration;
+			}
+			seeking = false;
+			updateProgress();
+		});
+		progress.addEventListener("input", () => {
+			const duration = audio.duration;
+			if (Number.isFinite(duration) && duration > 0) {
+				const preview = (Number(progress.value) / 1000) * duration;
+				timeEl.textContent = `${formatTime(preview)} / ${formatTime(duration)}`;
+			}
+		});
+		audio.addEventListener("play", syncMeta);
+		audio.addEventListener("pause", syncMeta);
+		audio.addEventListener("timeupdate", updateProgress);
+		audio.addEventListener("loadedmetadata", updateProgress);
+		audio.addEventListener("ended", () => {
+			if (loopMode === "off") {
+				toggle.textContent = "▶";
+				return;
+			}
+			loadTrack(idx + 1, true);
+		});
+
+		// 非 local 模式（netease/meting）：从后端 API 拉歌单；失败时保持空播放器
+		if (mode !== "local") {
+			fetch("/api/music/playlist.json")
+				.then((r) => (r.ok ? r.json() : Promise.reject(new Error("music api failed"))))
+				.then((data) => {
+					if (!Array.isArray(data?.playlist) || data.playlist.length === 0) return;
+					playlist.splice(0, playlist.length, ...data.playlist);
+					loadTrack(0, autoplay);
+				})
+				.catch(() => {});
+		} else if (autoplay) {
+			audio.play().catch(() => {});
+		}
+		syncMeta();
+	}
+
 	if (document.readyState === "loading") {
 		document.addEventListener("DOMContentLoaded", syncActiveNavByPath);
 		document.addEventListener("DOMContentLoaded", updateCornerBookmark);
 		document.addEventListener("DOMContentLoaded", setupCornerNavBookmarkFollow);
 		document.addEventListener("DOMContentLoaded", setupMobileCornerNav);
 		document.addEventListener("DOMContentLoaded", setupCornerThemeToggle);
+		document.addEventListener("DOMContentLoaded", setupAzaMusicPlayer);
 	} else {
 		syncActiveNavByPath();
 		updateCornerBookmark();
 		setupCornerNavBookmarkFollow();
 		setupMobileCornerNav();
 		setupCornerThemeToggle();
+		setupAzaMusicPlayer();
 	}
 	document.addEventListener("astro:page-load", setupCornerThemeToggle);
-	document.addEventListener("swup:pageView", setupCornerThemeToggle);
-	document.addEventListener("swup:page:view", setupCornerThemeToggle);
+	document.addEventListener("astro:page-load", setupAzaMusicPlayer);
 	window.addEventListener("resize", () => {
 		syncActiveNavByPath();
 		updateCornerBookmark();

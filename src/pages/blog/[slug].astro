@@ -1,11 +1,10 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
 import { render } from "astro:content";
 
 import Markdown from "../../components/misc/Markdown.astro";
-import CornerLayout from "../../layouts/CornerLayout.astro";
-import { getSortedPosts } from "../../utils/content-utils";
-import { removeFileExtension } from "../../utils/url-utils";
+import AzaMOELayout from "../../layouts/AzaMOELayout.astro";
 
 interface Props {
 	entry: CollectionEntry<"posts">;
@@ -23,9 +22,9 @@ const cleanTocText = (text: string) =>
 		.trim();
 
 export async function getStaticPaths() {
-	const posts = await getSortedPosts();
+	const posts = await getCollection("posts", ({ data }) => !data.draft);
 	return posts.map((entry) => ({
-		params: { slug: removeFileExtension(entry.id) },
+		params: { slug: entry.id.replace(/\.[^/.]+$/, "") },
 		props: { entry },
 	}));
 }
@@ -63,7 +62,7 @@ for (const heading of headings) {
 }
 ---
 
-<CornerLayout current="blog" title={entry.data.title}>
+<AzaMOELayout current="blog" title={entry.data.title}>
 	<div class="corner-post-layout">
 		<article class="corner-post">
 			<div class="corner-card">
@@ -126,7 +125,7 @@ for (const heading of headings) {
 			</aside>
 		)}
 	</div>
-</CornerLayout>
+</AzaMOELayout>
 
 <script>
 	import { initFancybox } from "../../scripts/handlers/fancybox-handler";

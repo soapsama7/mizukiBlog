@@ -1,5 +1,5 @@
 {
-	"name": "mizuki",
+	"name": "azamoe",
 	"type": "module",
 	"version": "8.2",
 	"scripts": {
@@ -10,10 +10,7 @@
 		"dev": "astro dev",
 		"start": "astro dev",
 		"check": "astro check",
-		"update-anime": "node scripts/update-anime.mjs",
-		"update-bangumi": "node scripts/update-bangumi.mjs",
-		"update-bilibili": "node scripts/update-bilibili.mjs",
-		"build": "node scripts/update-anime.mjs && astro build && pagefind --site dist && node scripts/compress-fonts.js",
+		"build": "astro build && pagefind --site dist",
 		"submit": "node scripts/indexnow-submit.js",
 		"preview": "astro preview",
 		"astro": "astro",
@@ -22,8 +19,6 @@
 		"format": "prettier --write ./src",
 		"lint": "eslint ./src --fix",
 		"preinstall": "npx only-allow pnpm",
-		"compress-fonts": "node scripts/compress-fonts.js",
-		"test-font-compression": "node scripts/test-font-compression.js",
 		"lhci": "lhci",
 		"lighthouse": "lighthouse",
 		"performance:baseline": "node scripts/performance-baseline.js",

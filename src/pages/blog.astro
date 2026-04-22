@@ -1,16 +1,21 @@
 ---
-import { getSortedPostsList } from "../utils/content-utils";
-import CornerLayout from "../layouts/CornerLayout.astro";
-import { removeFileExtension } from "../utils/url-utils";
+import AzaMOELayout from "../layouts/AzaMOELayout.astro";
+import { getCollection } from "astro:content";
+import { themeTextConfig } from "../config";
 
-const posts = await getSortedPostsList();
+const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
+	(a, b) =>
+		new Date(b.data.published).getTime() - new Date(a.data.published).getTime(),
+);
+
+const toSlug = (id: string) => id.replace(/\.[^/.]+$/, "");
 ---
 
-<CornerLayout current="blog" title="Blog">
+<AzaMOELayout current="blog" title={themeTextConfig.pages.blog.title}>
 	<section class="corner-blog">
 		<div>
-			<h2>文章</h2>
-			<div class="corner-subtitle">一些思考与记录，值得被认真保存</div>
+			<h2>{themeTextConfig.pages.blog.title}</h2>
+			<div class="corner-subtitle">{themeTextConfig.pages.blog.subtitle}</div>
 		</div>
 		{
 			posts.map((post) => (
@@ -18,7 +23,7 @@ const posts = await getSortedPostsList();
 					<div class="corner-date">
 						{new Date(post.data.published).toISOString().slice(0, 10)}
 					</div>
-					<a class="corner-title" href={`/blog/${removeFileExtension(post.id)}/`}>
+					<a class="corner-title" href={`/blog/${toSlug(post.id)}/`}>
 						{post.data.title}
 					</a>
 					{post.data.description && (
@@ -28,4 +33,4 @@ const posts = await getSortedPostsList();
 			))
 		}
 	</section>
-</CornerLayout>
+</AzaMOELayout>

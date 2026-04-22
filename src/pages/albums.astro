@@ -1,15 +1,16 @@
 ---
-import CornerLayout from "../layouts/CornerLayout.astro";
+import AzaMOELayout from "../layouts/AzaMOELayout.astro";
 import { scanAlbums } from "../utils/album-scanner";
+import { themeTextConfig } from "../config";
 
 // 获取所有相册
 const albumsData = await scanAlbums();
 ---
 
-<CornerLayout current="albums" title="相册">
+<AzaMOELayout current="albums" title={themeTextConfig.pages.albums.title}>
 	<section class="corner-blog">
-		<h2>相册</h2>
-		<div class="corner-subtitle">收藏生活里的片段</div>
+		<h2>{themeTextConfig.pages.albums.title}</h2>
+		<div class="corner-subtitle">{themeTextConfig.pages.albums.subtitle}</div>
 		<div class="corner-grid">
 			{
 				albumsData.map((album) => (
@@ -26,4 +27,4 @@ const albumsData = await scanAlbums();
 			}
 		</div>
 	</section>
-</CornerLayout>
+</AzaMOELayout>

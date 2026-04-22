@@ -1,8 +1,9 @@
 ---
 import Markdown from "@components/misc/Markdown.astro";
 import { getEntry, render } from "astro:content";
+import { themeTextConfig } from "../config";
 
-import CornerLayout from "../layouts/CornerLayout.astro";
+import AzaMOELayout from "../layouts/AzaMOELayout.astro";
 
 const aboutPost = await getEntry("spec", "about");
 if (!aboutPost) {
@@ -12,7 +13,7 @@ if (!aboutPost) {
 const { Content } = await render(aboutPost);
 ---
 
-<CornerLayout current="about" title="关于">
+<AzaMOELayout current="about" title={themeTextConfig.pages.about.title}>
 	<section id="corner-about" class="corner-blog corner-about">
 		<div id="corner-about-markdown">
 			<Markdown class="markdown-content corner-about-content">
@@ -20,7 +21,7 @@ const { Content } = await render(aboutPost);
 			</Markdown>
 		</div>
 	</section>
-</CornerLayout>
+</AzaMOELayout>
 
 <script>
 	type SectionNode = {

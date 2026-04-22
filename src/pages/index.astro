@@ -1,12 +1,13 @@
 ---
-import CornerLayout from "../layouts/CornerLayout.astro";
+import AzaMOELayout from "../layouts/AzaMOELayout.astro";
+import { themeTextConfig } from "../config";
 ---
 
-<CornerLayout current="home" title="Home">
+<AzaMOELayout current="home" title={themeTextConfig.pages.home.title}>
 	<section class="corner-home">
 		<div class="corner-home-box">
-			<div class="corner-script">Azalea's</div>
-			<div class="corner-script bold">Road Less Traveled</div>
+			<div class="corner-script">{themeTextConfig.homeHeroTop}</div>
+			<div class="corner-script bold">{themeTextConfig.homeHeroBottom}</div>
 		</div>
 	</section>
-</CornerLayout>
+</AzaMOELayout>

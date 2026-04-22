@@ -16,13 +16,22 @@
 		],
 		"paths": {
 			"@components/*": ["src/components/*"],
-			"@assets/*": ["src/assets/*"],
-			"@constants/*": ["src/constants/*"],
 			"@utils/*": ["src/utils/*"],
-			"@i18n/*": ["src/i18n/*"],
 			"@layouts/*": ["src/layouts/*"],
 			"@/*": ["src/*"]
 		}
 	},
-	"include": ["src/**/*"]
+	"include": [
+		"src/pages/**/*.astro",
+		"src/layouts/AzaMOELayout.astro",
+		"src/layouts/CornerLayout.astro",
+		"src/components/misc/**/*.astro",
+		"src/data/**/*.ts",
+		"src/utils/album-scanner.ts",
+		"src/scripts/handlers/**/*.ts",
+		"src/types/**/*.ts",
+		"src/config.ts",
+		"src/content.config.ts",
+		"src/global.d.ts"
+	]
 }

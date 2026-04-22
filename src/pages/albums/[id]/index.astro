@@ -1,5 +1,5 @@
 ---
-import CornerLayout from "../../../layouts/CornerLayout.astro";
+import AzaMOELayout from "../../../layouts/AzaMOELayout.astro";
 import type { AlbumGroup, Photo } from "../../../types/album";
 import { scanAlbums } from "../../../utils/album-scanner";
 
@@ -22,7 +22,7 @@ if (!album) {
 }
 ---
 
-<CornerLayout current="albums" title={album.title}>
+<AzaMOELayout current="albums" title={album.title}>
 	<section class="corner-blog">
 		<div class="corner-breadcrumb"><a href="/albums/">索引</a> &gt; {album.title}</div>
 		<article class="corner-card">
@@ -39,4 +39,4 @@ if (!album) {
 			</div>
 		</article>
 	</section>
-</CornerLayout>
+</AzaMOELayout>

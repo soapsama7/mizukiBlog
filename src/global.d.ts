@@ -68,12 +68,12 @@ declare global {
 		renderMermaidDiagrams?: () => void;
 
 		// Sidebar manager window properties
-		__mizukiSidebarResizeHandler?: () => void;
-		__mizukiSidebarSwupHooked?: boolean;
-		__mizukiSidebarManagerInitialized?: boolean;
-		__mizukiRightSidebarResizeHandler?: () => void;
-		__mizukiRightSidebarSwupHooked?: boolean;
-		__mizukiRightSidebarManagerInitialized?: boolean;
+		__azaMOESidebarResizeHandler?: () => void;
+		__azaMOESidebarSwupHooked?: boolean;
+		__azaMOESidebarManagerInitialized?: boolean;
+		__azaMOERightSidebarResizeHandler?: () => void;
+		__azaMOERightSidebarSwupHooked?: boolean;
+		__azaMOERightSidebarManagerInitialized?: boolean;
 	}
 
 	interface Fancybox {

@@ -3,10 +3,37 @@
  * 管理图片灯箱的初始化和清理
  */
 
-import {
-	FANCYBOX_SELECTORS,
-	getDefaultFancyboxConfig,
-} from '../core/swup-config';
+const FANCYBOX_SELECTORS = {
+	albumImages: ".custom-md img, #post-cover img, .moment-images img",
+	albumLinks: ".moment-images a[data-fancybox]",
+	singleFancybox: "[data-fancybox]:not(.moment-images a)",
+} as const;
+
+const getDefaultFancyboxConfig = () => ({
+	Thumbs: { autoStart: true, showOnStart: "yes" },
+	Toolbar: {
+		display: {
+			left: ["infobar"],
+			middle: [
+				"zoomIn",
+				"zoomOut",
+				"toggle1to1",
+				"rotateCCW",
+				"rotateCW",
+				"flipX",
+				"flipY",
+			],
+			right: ["slideshow", "thumbs", "close"],
+		},
+	},
+	animated: true,
+	dragToClose: true,
+	fitToView: true,
+	preload: 3,
+	infinite: true,
+	caption: false,
+	Panzoom: { maxScale: 3, minScale: 1 },
+});
 
 // Fancybox 模块类型
 type FancyboxType = any;

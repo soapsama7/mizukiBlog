@@ -1,14 +1,15 @@
 ---
-import CornerLayout from "../layouts/CornerLayout.astro";
+import AzaMOELayout from "../layouts/AzaMOELayout.astro";
 import { getDiaryList } from "../data/diary";
+import { themeTextConfig } from "../config";
 
 const diaryList = getDiaryList();
 ---
 
-<CornerLayout current="life" title="生活">
+<AzaMOELayout current="life" title={themeTextConfig.pages.life.title}>
 	<section class="corner-blog">
-		<h2>生活</h2>
-		<div class="corner-subtitle">一些日常碎片</div>
+		<h2>{themeTextConfig.pages.life.title}</h2>
+		<div class="corner-subtitle">{themeTextConfig.pages.life.subtitle}</div>
 		{
 			diaryList.length === 0 ? (
 				<article class="corner-card">还没有内容</article>
@@ -22,4 +23,4 @@ const diaryList = getDiaryList();
 			)
 		}
 	</section>
-</CornerLayout>
+</AzaMOELayout>
