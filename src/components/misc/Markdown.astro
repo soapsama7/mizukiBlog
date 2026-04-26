@@ -97,9 +97,7 @@ document.addEventListener("click", function (e: MouseEvent) {
                 textArea.select();
                 
                 try {
-                    // @ts-ignore
-                    // const successful = document.execCommand('copy');
-                    const successful = true; // document.execCommand is deprecated
+                    const successful = document.execCommand('copy');
                     if (!successful) {
                         throw new Error('execCommand 返回 false');
                     }

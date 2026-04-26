@@ -1,5 +1,8 @@
 export {};
 
+declare module "*.css";
+declare module "@fancyapps/ui/dist/fancybox/fancybox.css";
+
 declare global {
 	interface HTMLElementTagNameMap {
 		"table-of-contents": HTMLElement & {

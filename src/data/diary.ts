@@ -18,7 +18,6 @@ const diaryData: DiaryItem[] = [
 		content:
 			"The falling speed of cherry blossoms is five centimeters per second!",
 		date: "2025-01-15T10:30:00Z",
-		images: ["/images/diary/sakura.jpg", "/images/diary/1.jpg"],
 	},
 ];
 
@@ -30,21 +29,23 @@ export const getDiaryStats = () => {
 	).length;
 	const hasLocation = diaryData.filter((item) => item.location).length;
 	const hasMood = diaryData.filter((item) => item.mood).length;
+	const percentage = (count: number) =>
+		total === 0 ? 0 : Math.round((count / total) * 100);
 
 	return {
 		total,
 		hasImages,
 		hasLocation,
 		hasMood,
-		imagePercentage: Math.round((hasImages / total) * 100),
-		locationPercentage: Math.round((hasLocation / total) * 100),
-		moodPercentage: Math.round((hasMood / total) * 100),
+		imagePercentage: percentage(hasImages),
+		locationPercentage: percentage(hasLocation),
+		moodPercentage: percentage(hasMood),
 	};
 };
 
 // 获取日记列表（按时间倒序）
 export const getDiaryList = (limit?: number) => {
-	const sortedData = diaryData.sort(
+	const sortedData = [...diaryData].sort(
 		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
 	);
 

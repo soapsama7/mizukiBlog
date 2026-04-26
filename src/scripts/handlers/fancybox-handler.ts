@@ -55,6 +55,7 @@ export class FancyboxHandler {
 		const hasImages = this.checkForImages();
 
 		if (!hasImages) {
+			this.cleanup();
 			return;
 		}
 
@@ -63,9 +64,9 @@ export class FancyboxHandler {
 			await this.loadFancybox();
 		}
 
-		// 避免重复初始化
+		// Swup/Astro page transitions replace DOM nodes, so refresh bindings per view.
 		if (this.boundSelectors.length > 0) {
-			return;
+			this.cleanup();
 		}
 
 		this.bindImageSelectors();

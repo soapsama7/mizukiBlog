@@ -178,6 +178,7 @@ export default defineConfig({
 		],
 	},
 	vite: {
+		plugins: [tailwindcss()],
 		build: {
 			// 静态资源处理优化，防止小图片转 base64 导致 HTML 体积过大（可选，根据需要调整）
 			assetsInlineLimit: 4096,
@@ -198,8 +199,5 @@ export default defineConfig({
 				},
 			},
 		},
-	},
-	vite: {
-		plugins: [tailwindcss()],
 	},
 });

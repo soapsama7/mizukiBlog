@@ -49,7 +49,6 @@ src/data/bangumi-data.json
 
 # Bilibili generated data
 src/data/bilibili-data.json
-src/config.ts
 
 # Lighthouse CI
 .lighthouseci/

@@ -36,14 +36,32 @@ const fullTitle = current === "home"
 						<a
 							class:list={[
 								"corner-link",
+								{ "corner-link-home": item.key === "home" },
 								{ active: current === item.key },
 							]}
 							data-nav-key={item.key}
 							href={item.href}
+							aria-label={item.label}
 						>
-							{item.label}
+							{item.key === "home" ? (
+								<>
+									<span class="corner-sr-only">{item.label}</span>
+									<svg
+										class="corner-home-icon"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+										focusable="false"
+									>
+										<path d="M4 10.8 12 4l8 6.8" />
+										<path d="M6.5 9.5v9h11v-9" />
+										<path d="M10 18.5v-5h4v5" />
+									</svg>
+								</>
+							) : (
+								item.label
+							)}
 						</a>
-						<div class="corner-dot">·</div>
+						{item.key !== "home" && <div class="corner-dot">·</div>}
 					</>
 				))}
 			</div>
@@ -104,6 +122,9 @@ const fullTitle = current === "home"
 </html>
 
 <script>
+	import { initAboutAccordion } from "../scripts/handlers/about-accordion";
+	import { initPostEnhancements } from "../scripts/handlers/post-enhancements";
+
 	const CORNER_THEME_KEY = "corner-theme";
 
 	function applyCornerTheme(theme: "light" | "dark") {
@@ -372,6 +393,8 @@ const fullTitle = current === "home"
 		document.addEventListener("DOMContentLoaded", setupMobileCornerNav);
 		document.addEventListener("DOMContentLoaded", setupCornerThemeToggle);
 		document.addEventListener("DOMContentLoaded", setupAzaMusicPlayer);
+		document.addEventListener("DOMContentLoaded", initAboutAccordion);
+		document.addEventListener("DOMContentLoaded", initPostEnhancements);
 	} else {
 		syncActiveNavByPath();
 		updateCornerBookmark();
@@ -379,9 +402,23 @@ const fullTitle = current === "home"
 		setupMobileCornerNav();
 		setupCornerThemeToggle();
 		setupAzaMusicPlayer();
+		initAboutAccordion();
+		initPostEnhancements();
 	}
 	document.addEventListener("astro:page-load", setupCornerThemeToggle);
 	document.addEventListener("astro:page-load", setupAzaMusicPlayer);
+	document.addEventListener("astro:page-load", initAboutAccordion);
+	document.addEventListener("astro:page-load", initPostEnhancements);
+	document.addEventListener("swup:pageView", initAboutAccordion);
+	document.addEventListener("swup:pageView", initPostEnhancements);
+	document.addEventListener("swup:page:view", initAboutAccordion);
+	document.addEventListener("swup:page:view", initPostEnhancements);
+
+	const swupForAbout = (window as Window & { swup?: { hooks?: { on?: (event: string, cb: () => void) => void } } }).swup;
+	if (swupForAbout?.hooks?.on) {
+		swupForAbout.hooks.on("page:view", initAboutAccordion);
+		swupForAbout.hooks.on("page:view", initPostEnhancements);
+	}
 	window.addEventListener("resize", () => {
 		syncActiveNavByPath();
 		updateCornerBookmark();

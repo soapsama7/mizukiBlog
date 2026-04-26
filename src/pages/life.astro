@@ -1,26 +1,142 @@
 ---
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
 import AzaMOELayout from "../layouts/AzaMOELayout.astro";
-import { getDiaryList } from "../data/diary";
 import { themeTextConfig } from "../config";
 
-const diaryList = getDiaryList();
+type DiaryEntry = CollectionEntry<"diary">;
+type DiaryImage = DiaryEntry["data"]["images"][number];
+
+const getDiaryImage = (
+	image: DiaryImage,
+) => typeof image === "string"
+	? { src: image, alt: "" }
+	: image;
+
+const getDiaryId = (entry: DiaryEntry) =>
+	String(entry.data.postId ?? entry.id.replace(/\.[^/.]+$/, ""));
+
+const diaryEntries = (await getCollection("diary", ({ data }) => !data.draft))
+	.sort(
+		(a: DiaryEntry, b: DiaryEntry) =>
+			b.data.date.getTime() - a.data.date.getTime(),
+	);
+
+const diaryList = await Promise.all(
+	diaryEntries.map(async (entry: DiaryEntry) => {
+		const { Content } = await render(entry);
+		return { entry, Content };
+	}),
+);
 ---
 
 <AzaMOELayout current="life" title={themeTextConfig.pages.life.title}>
 	<section class="corner-blog">
-		<h2>{themeTextConfig.pages.life.title}</h2>
-		<div class="corner-subtitle">{themeTextConfig.pages.life.subtitle}</div>
+		<div class="corner-life-title">
+			<h2>生活</h2>
+			<div class="corner-life-subtitle">
+				<p>
+					稍纵即逝又弥足珍贵
+				</p>
+				<p>
+					为了满足自己分享欲的板块
+				</p>
+			</div>
+		</div>
 		{
 			diaryList.length === 0 ? (
 				<article class="corner-card">还没有内容</article>
 			) : (
-				diaryList.map((item) => (
-					<article class="corner-card">
-						<div class="corner-date">{new Date(item.date).toISOString().slice(0, 10)}</div>
-						<div class="corner-excerpt">{item.content}</div>
+				diaryList.map(({ entry, Content }) => (
+					<article
+						id={`diary-${getDiaryId(entry)}`}
+						class="corner-card corner-diary-entry"
+					>
+						{entry.data.reply && (
+							<button
+								class="corner-diary-reply"
+								type="button"
+								data-reply-target={entry.data.reply.id ? `diary-${entry.data.reply.id}` : undefined}
+								aria-label="引用的日记"
+							>
+								{entry.data.reply.image && (
+									<img src={entry.data.reply.image} alt="" loading="lazy" />
+								)}
+								<span>
+									<strong>{entry.data.reply.title}</strong>
+									<span>{entry.data.reply.text}</span>
+								</span>
+							</button>
+						)}
+						{entry.data.images.length > 0 && (
+							<div
+								class:list={[
+									"corner-diary-images",
+									`count-${Math.min(entry.data.images.length, 4)}`,
+								]}
+							>
+								{entry.data.images.slice(0, 6).map((image: DiaryImage) => {
+									const item = getDiaryImage(image);
+									return (
+										<a href={item.src} target="_blank" rel="noreferrer">
+											<img src={item.src} alt={item.alt} loading="lazy" />
+										</a>
+									);
+								})}
+							</div>
+						)}
+						{entry.data.title && <h3 class="corner-title">{entry.data.title}</h3>}
+						<div class="corner-diary-meta">
+							{entry.data.mood && <span>{entry.data.mood}</span>}
+							{entry.data.tags.map((tag: string) => (
+								<span>#{tag}</span>
+							))}
+						</div>
+						<div data-pagefind-body class="markdown-content custom-md corner-diary-content">
+							<Content />
+						</div>
+						<div class="corner-diary-footer">
+							<span>#{getDiaryId(entry)}</span>
+							<span>{entry.data.date.toISOString().slice(0, 16).replace("T", " ")}</span>
+						</div>
 					</article>
 				))
 			)
 		}
 	</section>
 </AzaMOELayout>
+
+<script>
+	function initDiaryReplyJump() {
+		document.querySelectorAll<HTMLButtonElement>(".corner-diary-reply").forEach((button) => {
+			if (button.dataset.bound === "true") {
+				return;
+			}
+			button.dataset.bound = "true";
+			button.addEventListener("click", () => {
+				const targetId = button.dataset.replyTarget;
+				if (!targetId) {
+					return;
+				}
+				const target = document.getElementById(targetId);
+				if (!target) {
+					return;
+				}
+				target.scrollIntoView({ behavior: "smooth", block: "center" });
+				target.classList.add("corner-diary-shake");
+				window.setTimeout(() => {
+					target.classList.remove("corner-diary-shake");
+				}, 1400);
+			});
+		});
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initDiaryReplyJump, { once: true });
+	} else {
+		initDiaryReplyJump();
+	}
+	document.addEventListener("astro:page-load", initDiaryReplyJump);
+	document.addEventListener("swup:pageView", initDiaryReplyJump);
+	document.addEventListener("swup:page:view", initDiaryReplyJump);
+</script>
