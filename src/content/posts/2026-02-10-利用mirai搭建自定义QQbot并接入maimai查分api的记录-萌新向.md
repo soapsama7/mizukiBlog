@@ -1,11 +1,10 @@
 ---
 title: 搭建自定义QQbot并接入maimai查分api的记录-萌新向
 published: 2026-02-10 18:29:23
-pinned: false
 description: 尝试了一下搭建qqbot
+pinned: false
 tags: [Astrbot, qqbot]
 category: QQbot
-draft: false
 ---
 
 
