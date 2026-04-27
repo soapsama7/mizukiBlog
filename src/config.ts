@@ -19,8 +19,8 @@ export const siteConfig: AzaSiteConfig = {
 
 // AzaMOE 页面文案配置
 export const themeTextConfig: AzaThemeTextConfig = {
-	homeHeroTop: "soapsama's",
-	homeHeroBottom: "Road Less Traveled",
+	homeHeroTop: "朽ちゆく身体と心を連れ",
+	homeHeroBottom: "一人当て無く漂っていくの",
 	navItems: [
 		{ key: "friends", label: "友链", href: "/friends/" },
 		{ key: "albums", label: "相册", href: "/albums/" },

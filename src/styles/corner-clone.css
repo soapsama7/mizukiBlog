@@ -1,5 +1,5 @@
 @import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css");
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;600&family=Shadows+Into+Light&family=Caveat:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;600&family=Shadows+Into+Light&family=Caveat:wght@500;600;700&family=Zen+Kurenaido&family=Yomogi&family=Noto+Sans+SC:wght@400;500;700&display=swap");
 
 html,
 body {
@@ -435,8 +435,22 @@ body.corner-clone.dark-mode .corner-pill.active {
 	font-family: "Caveat", "Shadows Into Light", cursive;
 }
 
+.corner-script-jp {
+	font-family: "Zen Kurenaido", "Yomogi", "LXGW WenKai", var(--font-fallback),
+		sans-serif;
+	font-size: 0.82em;
+	font-weight: 400;
+	line-height: 1.24;
+	letter-spacing: 0.06em;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
 .corner-script.bold {
 	font-weight: 700;
+}
+
+.corner-script-jp.bold {
+	font-weight: 400;
 }
 
 .corner-blog {
